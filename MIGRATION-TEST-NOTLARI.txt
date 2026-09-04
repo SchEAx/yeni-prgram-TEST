@@ -152,3 +152,10 @@ v14.3:
 - GarageFlow anket raporu Supabase yerine GET /api/customer-surveys üzerinden PostgreSQL okuyor.
 - Toplam anket sayısı API count alanından geliyor; ekranda son 200 kayıt analiz ediliyor.
 - Müşterinin halka açık anket formu henüz PostgreSQL yazımına geçirilmedi; bu aşama sadece GarageFlow yönetim ekranıdır.
+
+
+=== v15.1 ===
+- Güncelleme bildiriminin sürekli görünmesine neden olan sürüm eşleşme hatası düzeltildi.
+- APP_VERSION ile PWA_BUILD_VERSION tek kaynaktan besleniyor.
+- Service worker kayıt sürümü ve cache adı 15.1'e yükseltildi.
+- JS/CSS asset query sürümleri 15.1'e yükseltildi; eski tarayıcı/SW cache'inin kalması engellendi.

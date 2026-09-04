@@ -120,7 +120,7 @@ async function changeOwnPassword() {
 }
 window.changeOwnPassword = changeOwnPassword;
 
-const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-14.3";
+const PWA_BUILD_VERSION = APP_VERSION;
 let deferredPwaInstallPrompt = null;
 let pwaUpdateCheckRunning = false;
 
@@ -211,7 +211,7 @@ async function registerPwaServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
 
   const registration = await navigator.serviceWorker.register(
-    "./sw.js?v=14.3",
+    "./sw.js?v=15.1",
     { updateViaCache: "none" }
   );
 
