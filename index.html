@@ -21,8 +21,8 @@
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="Garage Stok" name="apple-mobile-web-app-title"/>
-<link href="manifest.webmanifest?v=15.3" rel="manifest"/>
-<link href="style.css?v=15.3" rel="stylesheet"/>
+<link href="manifest.webmanifest?v=15.4" rel="manifest"/>
+<link href="style.css?v=15.4" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -700,7 +700,7 @@ LED" rows="8"></textarea>
       #page-surveys .survey-comment strong{color:#93c5fd}
       #page-surveys .survey-comment p{margin:8px 0 0;white-space:pre-wrap;color:#f8fafc}
       #page-surveys .survey-comment small{display:block;color:#cbd5e1;margin-top:6px}
-      /* v15.3 - Anket kayıt tablosu / tema uyumu */
+      /* v15.4 - Anket kayıt tablosu / tema uyumu */
       #page-surveys .survey-table-scroll{width:100%;overflow:auto;border-radius:14px;border:1px solid var(--border);margin:10px 0 20px;background:color-mix(in srgb,var(--panel) 92%,transparent)}
       #page-surveys .survey-table{margin:0;border:0;border-radius:0;background:var(--panel);color:var(--text)}
       #page-surveys .survey-table th{position:sticky;top:0;z-index:1;background:color-mix(in srgb,var(--panel) 82%,#000 18%);color:var(--text);white-space:nowrap}
@@ -712,6 +712,15 @@ LED" rows="8"></textarea>
       #page-surveys .survey-table-comment{min-width:260px;max-width:420px;white-space:normal;line-height:1.4}
       #page-surveys .survey-row-low td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
       #page-surveys .survey-delete-btn{padding:8px 12px;white-space:nowrap}
+      /* v15.4 - ID ve Sil sütunu yatay kaydırmada da görünür */
+      #page-surveys .survey-record-table th:nth-child(1),
+      #page-surveys .survey-record-table td:nth-child(1){position:sticky;left:0;z-index:3;background:var(--panel)!important;min-width:64px}
+      #page-surveys .survey-record-table th:nth-child(2),
+      #page-surveys .survey-record-table td:nth-child(2){position:sticky;left:64px;z-index:3;background:var(--panel)!important;min-width:82px;border-right:1px solid var(--border)!important}
+      #page-surveys .survey-record-table th:nth-child(1),
+      #page-surveys .survey-record-table th:nth-child(2){z-index:5;background:color-mix(in srgb,var(--panel) 82%,#000 18%)!important}
+      #page-surveys .survey-row-low td:nth-child(1),
+      #page-surveys .survey-row-low td:nth-child(2){background:color-mix(in srgb,var(--danger) 10%,var(--panel))!important}
       #page-surveys .survey-comment{background:var(--panel);color:var(--text);border-color:var(--border)}
       #page-surveys .survey-comment p{color:var(--text)}
       #page-surveys .survey-comment small{color:var(--muted)}
@@ -829,21 +838,21 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=15.3"></script>
-<script src="js/inventory.js?v=15.3"></script>
-<script src="js/sales-dashboard.js?v=15.3"></script>
-<script src="js/staff.js?v=15.3"></script>
-<script src="js/sales.js?v=15.3"></script>
-<script src="js/requests.js?v=15.3"></script>
-<script src="js/surveys.js?v=15.3"></script>
-<script src="js/management.js?v=15.3"></script>
-<script src="js/purchasing.js?v=15.3"></script>
-<script src="js/navigation.js?v=15.3"></script>
-<script src="js/reports.js?v=15.3"></script>
-<script src="js/migration-api.js?v=15.3"></script>
-<script src="js/events.js?v=15.3"></script>
-<script src="js/excel.js?v=15.3"></script>
-<script src="js/migration-excel.js?v=15.3"></script>
-<script src="app.js?v=15.3"></script>
+<script src="js/core.js?v=15.4"></script>
+<script src="js/inventory.js?v=15.4"></script>
+<script src="js/sales-dashboard.js?v=15.4"></script>
+<script src="js/staff.js?v=15.4"></script>
+<script src="js/sales.js?v=15.4"></script>
+<script src="js/requests.js?v=15.4"></script>
+<script src="js/surveys.js?v=15.4"></script>
+<script src="js/management.js?v=15.4"></script>
+<script src="js/purchasing.js?v=15.4"></script>
+<script src="js/navigation.js?v=15.4"></script>
+<script src="js/reports.js?v=15.4"></script>
+<script src="js/migration-api.js?v=15.4"></script>
+<script src="js/events.js?v=15.4"></script>
+<script src="js/excel.js?v=15.4"></script>
+<script src="js/migration-excel.js?v=15.4"></script>
+<script src="app.js?v=15.4"></script>
 </body>
 </html>

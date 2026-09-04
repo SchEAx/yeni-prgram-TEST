@@ -173,3 +173,9 @@ v15.3
 - Admin için tek tek anket silme butonu eklendi (DELETE API gerekir).
 - Kullanıcının yeni Garage İstanbul logosu logo.png ve PWA ikonlarına uygulandı.
 - favicon/apple-touch/PWA ikonları aynı logodan üretildi.
+
+
+v15.4:
+- Anket tablosunda İşlem/Sil sütunu ID yanına taşındı.
+- ID + İşlem sütunları yatay kaydırmada sabit kalır.
+- Admin tespiti JWT state.currentUser rolünü öncelikli kullanır.

@@ -8,9 +8,16 @@ function customerSurveyRowAverage(row) {
 }
 
 function customerSurveyAdminDeleteButton(id) {
-  if (typeof currentStaff !== "function" || currentStaff().role !== "admin") {
+  const liveRole = String(
+    state?.currentUser?.role ||
+    (typeof currentStaff === "function" ? currentStaff()?.role : "") ||
+    ""
+  ).trim().toLowerCase();
+
+  if (liveRole !== "admin") {
     return `<span class="muted">-</span>`;
   }
+
   return `<button class="btn danger mini survey-delete-btn" type="button" onclick="deleteCustomerSurvey('${escapeHtml(String(id || ""))}')">Sil</button>`;
 }
 
@@ -115,13 +122,13 @@ async function loadCustomerSurveyStats() {
         : "Anonim";
       const scoreCells = scoreKeys.map(k => `<td>${escapeHtml(String(r[k] ?? "-"))}</td>`).join("");
       return `<tr class="${low ? "survey-row-low" : ""}">
-        <td><strong>#${escapeHtml(String(r.id || "-"))}</strong></td>
+        <td class="survey-id-cell"><strong>#${escapeHtml(String(r.id || "-"))}</strong></td>
+        <td class="survey-action-cell">${customerSurveyAdminDeleteButton(r.id)}</td>
         <td>${formatDate(r.created_at)}</td>
         <td><strong>${customerSurveyRowAverage(r)}</strong></td>
         ${scoreCells}
         <td class="survey-table-comment" title="${escapeHtml(comment)}">${comment ? escapeHtml(comment) : "-"}</td>
         <td>${contact}</td>
-        <td>${customerSurveyAdminDeleteButton(r.id)}</td>
       </tr>`;
     }).join("") || `<tr><td colspan="14" class="empty-state">Henüz anket kaydı yok.</td></tr>`;
 
@@ -149,9 +156,9 @@ async function loadCustomerSurveyStats() {
         <table class="survey-table survey-record-table">
           <thead>
             <tr>
-              <th>ID</th><th>Tarih</th><th>Ort.</th>
+              <th>ID</th><th>İşlem</th><th>Tarih</th><th>Ort.</th>
               <th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Q5</th><th>Q6</th><th>Q7</th><th>Q8</th>
-              <th>Yorum</th><th>İletişim</th><th>İşlem</th>
+              <th>Yorum</th><th>İletişim</th>
             </tr>
           </thead>
           <tbody>${rawRowsHtml}</tbody>
