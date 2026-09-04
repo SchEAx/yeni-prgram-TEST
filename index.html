@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Stok Takip · Migration Test</title>
+<title>GarageFlow · Stok</title>
 <meta content="#111827" name="theme-color"/>
 <script>
 (function(){
@@ -20,8 +20,8 @@
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="Garage Stok" name="apple-mobile-web-app-title"/>
-<link href="manifest.webmanifest?v=13.0" rel="manifest"/>
-<link href="style.css?v=13.0" rel="stylesheet"/>
+<link href="manifest.webmanifest?v=14.0" rel="manifest"/>
+<link href="style.css?v=14.0" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -31,7 +31,7 @@
 <div class="login-logo-row">
 <img alt="Logo" onerror="this.style.display='none'" src="./logo.png"/>
 <div>
-<h1>Stok Takip</h1>
+<h1>GarageFlow · Stok</h1>
 <p class="muted">Personel girişi</p>
 </div>
 </div>
@@ -50,8 +50,12 @@
 <div class="brand-wrap">
 <img alt="Logo" class="app-logo" onerror="this.style.display='none'" src="./logo.png"/>
 <div>
-<h1>Stok Takip</h1>
-<p class="muted">Sade stok giriş / çıkış sistemi</p>
+<h1>GarageFlow <span class="brand-accent">· Stok</span></h1>
+<p class="muted flow-subtitle">PostgreSQL hızlı stok yönetimi</p>
+<div class="flow-route-row">
+  <span class="flow-route-pill">📍 <strong id="activeSectionLabel">İşlem</strong></span>
+  <span class="flow-live-pill"><i></i> PostgreSQL canlı</span>
+</div>
 </div>
 </div>
 <div class="top-actions">
@@ -790,7 +794,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=13.0"></script>
+<script src="js/core.js?v=14.0"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -799,12 +803,12 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=13.0"></script>
+<script src="js/navigation.js?v=14.0"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=13.0"></script>
-<script src="js/events.js?v=13.0"></script>
-<script src="js/excel.js?v=13.0"></script>
-<script src="js/migration-excel.js?v=13.0"></script>
-<script src="app.js?v=13.0"></script>
+<script src="js/migration-api.js?v=14.0"></script>
+<script src="js/events.js?v=14.0"></script>
+<script src="js/excel.js?v=14.0"></script>
+<script src="js/migration-excel.js?v=14.0"></script>
+<script src="app.js?v=14.0"></script>
 </body>
 </html>

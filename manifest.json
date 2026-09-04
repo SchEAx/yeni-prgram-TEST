@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Garage İstanbul Stok Takip",
-  "short_name": "Garage Stok",
-  "description": "Garage İstanbul stok takip uygulaması",
+  "name": "GarageFlow Stok",
+  "short_name": "GarageFlow",
+  "description": "GarageFlow PostgreSQL stok yönetimi",
   "lang": "tr",
   "start_url": "./",
   "scope": "./",

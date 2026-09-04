@@ -1022,3 +1022,488 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
     min-width:calc(50% - 5px);
   }
 }
+
+
+/* ==========================================================
+   GarageFlow UI v14
+   Masaüstü: sol navigasyon
+   Mobil/tablet: üstte yatay hızlı sekmeler
+   ========================================================== */
+
+:root{
+  --flow-sidebar-w:222px;
+  --flow-blue:#2f6fed;
+  --flow-blue-soft:rgba(47,111,237,.16);
+  --flow-green:#19c37d;
+  --flow-surface:rgba(13,22,38,.90);
+  --flow-surface-2:rgba(18,30,50,.94);
+}
+
+/* Genel zemin */
+body{
+  background:
+    radial-gradient(circle at 10% 0%, rgba(47,111,237,.10), transparent 34%),
+    radial-gradient(circle at 95% 12%, rgba(25,195,125,.07), transparent 30%),
+    linear-gradient(180deg,#07101d 0%,#091422 48%,#0b1626 100%) !important;
+}
+
+.app-shell{
+  width:min(1480px,calc(100% - 24px));
+}
+
+/* Header */
+.topbar{
+  min-height:78px;
+  padding:10px 14px;
+  border:1px solid rgba(148,163,184,.12);
+  border-radius:20px;
+  background:rgba(7,16,29,.82);
+  box-shadow:0 12px 38px rgba(0,0,0,.20);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+}
+
+.brand-wrap{
+  gap:13px;
+}
+
+.app-logo{
+  width:52px!important;
+  height:52px!important;
+  border-radius:15px!important;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.08),
+    0 10px 25px rgba(0,0,0,.30);
+}
+
+.topbar h1{
+  font-size:25px;
+  letter-spacing:-.45px;
+}
+
+.brand-accent{
+  color:#76a2ff;
+  font-weight:800;
+}
+
+.flow-subtitle{
+  margin-top:1px!important;
+  font-size:12.5px!important;
+}
+
+.flow-route-row{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:6px;
+}
+
+.flow-route-pill,
+.flow-live-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:24px;
+  padding:3px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:800;
+  border:1px solid rgba(148,163,184,.15);
+  background:rgba(255,255,255,.035);
+  color:#cbd5e1;
+}
+
+.flow-route-pill{
+  color:#bfdbfe;
+  border-color:rgba(59,130,246,.22);
+  background:rgba(37,99,235,.10);
+}
+
+.flow-live-pill{
+  color:#a7f3d0;
+  border-color:rgba(16,185,129,.20);
+  background:rgba(16,185,129,.08);
+}
+
+.flow-live-pill i{
+  display:block;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#34d399;
+  box-shadow:0 0 0 4px rgba(52,211,153,.10);
+}
+
+/* Header aksiyonları GarageFlow kompakt */
+.top-actions{
+  align-items:center;
+}
+
+.top-actions .btn{
+  min-height:40px;
+  border-radius:12px;
+  padding:10px 14px;
+}
+
+.user-pill{
+  min-height:40px;
+  border-radius:13px!important;
+  box-shadow:inset 0 0 0 1px rgba(96,165,250,.10);
+}
+
+/* Card cilası */
+.card,
+.management-tool-card,
+.inner-card,
+.purchase-order-card,
+.purchase-draft-item{
+  border-color:rgba(148,163,184,.12)!important;
+  background:
+    linear-gradient(180deg,rgba(18,30,50,.94),rgba(14,24,41,.94))!important;
+  box-shadow:
+    0 14px 38px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.018)!important;
+}
+
+.card{
+  border-radius:18px!important;
+}
+
+.stat-card{
+  position:relative;
+  overflow:hidden;
+  min-height:92px;
+  padding:17px 18px!important;
+  transition:transform .18s ease,border-color .18s ease;
+}
+
+.stat-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(96,165,250,.22)!important;
+}
+
+.stat-card::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:3px;
+  background:linear-gradient(90deg,#3b82f6,#60a5fa);
+  opacity:.85;
+}
+
+.stats-grid .stat-card:nth-child(2)::after{
+  background:linear-gradient(90deg,#10b981,#34d399);
+}
+.stats-grid .stat-card:nth-child(3)::after{
+  background:linear-gradient(90deg,#8b5cf6,#a78bfa);
+}
+.stats-grid .stat-card:nth-child(4)::after{
+  background:linear-gradient(90deg,#ef4444,#fb7185);
+}
+
+.stat-card strong{
+  letter-spacing:-.6px;
+}
+
+/* Form alanları */
+input,textarea,select{
+  background:rgba(6,15,28,.78)!important;
+  border-color:rgba(148,163,184,.14)!important;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+
+input:hover,textarea:hover,select:hover{
+  border-color:rgba(148,163,184,.24)!important;
+}
+
+input:focus,textarea:focus,select:focus{
+  background:#09172a!important;
+  border-color:rgba(59,130,246,.78)!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,.14)!important;
+}
+
+/* Tablo başlığı sabit / daha okunaklı */
+.table-wrap{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.02);
+}
+
+.table-wrap thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#0b1728!important;
+  color:#cbd5e1!important;
+  font-size:12px;
+  text-transform:none;
+}
+
+tbody tr{
+  transition:background .12s ease;
+}
+tbody tr:hover{
+  background:rgba(59,130,246,.045);
+}
+
+/* Sayfa geçişi */
+.flow-page-enter{
+  animation:flowPageIn .18s ease-out;
+}
+
+@keyframes flowPageIn{
+  from{opacity:.45;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Butonlar */
+.btn,
+.top-nav button{
+  transition:
+    transform .14s ease,
+    filter .14s ease,
+    background .14s ease,
+    border-color .14s ease,
+    box-shadow .14s ease;
+}
+
+.btn:not(:disabled):active,
+.top-nav button:active{
+  transform:scale(.985);
+}
+
+/* Masaüstü GarageFlow sol menü */
+@media(min-width:1080px){
+  .app-shell{
+    position:relative;
+    padding-left:calc(var(--flow-sidebar-w) + 18px);
+  }
+
+  .topbar{
+    position:sticky;
+    top:10px;
+    z-index:90;
+    margin-left:calc((var(--flow-sidebar-w) + 18px) * -1);
+    width:calc(100% + var(--flow-sidebar-w) + 18px);
+    margin-bottom:16px;
+  }
+
+  .top-nav{
+    position:fixed!important;
+    z-index:70!important;
+    top:108px!important;
+    left:max(12px,calc((100vw - 1480px)/2 + 12px))!important;
+    width:var(--flow-sidebar-w)!important;
+    max-height:calc(100vh - 124px);
+    overflow-y:auto;
+    overflow-x:hidden;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:6px!important;
+    padding:10px!important;
+    margin:0!important;
+    border:1px solid rgba(148,163,184,.12);
+    border-radius:18px;
+    background:rgba(7,16,29,.88)!important;
+    box-shadow:0 16px 42px rgba(0,0,0,.24);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    scrollbar-width:thin;
+  }
+
+  .top-nav::before{
+    content:"GARAGEFLOW";
+    display:block;
+    padding:5px 9px 8px;
+    color:#64748b;
+    font-size:10px;
+    font-weight:900;
+    letter-spacing:1.35px;
+  }
+
+  .top-nav button{
+    position:relative;
+    width:100%!important;
+    min-height:43px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:9px;
+    padding:9px 11px!important;
+    border-radius:12px!important;
+    border:1px solid transparent!important;
+    background:transparent!important;
+    color:#cbd5e1!important;
+    text-align:left!important;
+    font-size:13px!important;
+    font-weight:750!important;
+    white-space:nowrap;
+  }
+
+  .top-nav button::before{
+    width:20px;
+    text-align:center;
+    opacity:.92;
+    flex:0 0 20px;
+  }
+
+  #nav-operation::before{content:"⚡"}
+  #nav-add::before{content:"➕"}
+  #nav-requests::before{content:"📌"}
+  #nav-movements::before{content:"↕️"}
+  #nav-critical::before{content:"🚨"}
+  #nav-categoryValues::before{content:"💰"}
+  #nav-orderSuggestion::before{content:"🛒"}
+  #nav-purchaseOrders::before{content:"📦"}
+  #nav-management::before{content:"🧰"}
+  #nav-settings::before{content:"⚙️"}
+  #nav-users::before{content:"👥"}
+  #nav-surveys::before{content:"⭐"}
+  #nav-logs::before{content:"🧾"}
+
+  .top-nav button:hover{
+    color:#fff!important;
+    background:rgba(148,163,184,.07)!important;
+  }
+
+  .top-nav button.active{
+    color:#fff!important;
+    background:linear-gradient(135deg,rgba(47,111,237,.98),rgba(37,99,235,.82))!important;
+    border-color:rgba(147,197,253,.26)!important;
+    box-shadow:
+      0 8px 22px rgba(37,99,235,.20),
+      inset 0 1px 0 rgba(255,255,255,.10)!important;
+  }
+
+  .top-nav button.active::after{
+    content:"";
+    position:absolute;
+    right:7px;
+    width:5px;
+    height:5px;
+    border-radius:50%;
+    background:#bfdbfe;
+    box-shadow:0 0 0 4px rgba(191,219,254,.08);
+  }
+
+  .stats-grid{
+    margin-top:2px;
+  }
+}
+
+/* Tablet / mobil: GarageFlow üst hızlı sekmeler */
+@media(max-width:1079px){
+  .app-shell{
+    padding-left:0!important;
+  }
+
+  .topbar{
+    position:static!important;
+    margin-left:0!important;
+    width:auto!important;
+  }
+
+  .top-nav{
+    position:sticky!important;
+    top:0!important;
+    z-index:80!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    grid-template-columns:none!important;
+    gap:7px!important;
+    padding:9px 2px 10px!important;
+    margin-bottom:12px!important;
+    background:
+      linear-gradient(180deg,rgba(7,16,29,.98),rgba(7,16,29,.91))!important;
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    scrollbar-width:none;
+  }
+
+  .top-nav::-webkit-scrollbar{
+    display:none;
+  }
+
+  .top-nav button{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:max-content;
+    min-height:41px;
+    padding:10px 13px!important;
+    border-radius:12px!important;
+    font-size:12.5px!important;
+    white-space:nowrap;
+  }
+
+  .top-nav button.active{
+    box-shadow:0 6px 18px rgba(37,99,235,.22)!important;
+  }
+}
+
+/* Telefon header */
+@media(max-width:640px){
+  .app-shell{
+    width:calc(100% - 14px)!important;
+    margin-top:8px!important;
+  }
+
+  .topbar{
+    padding:10px!important;
+    border-radius:16px!important;
+  }
+
+  .brand-wrap{
+    align-items:flex-start!important;
+  }
+
+  .app-logo{
+    width:45px!important;
+    height:45px!important;
+  }
+
+  .topbar h1{
+    font-size:21px!important;
+  }
+
+  .flow-route-row{
+    margin-top:5px;
+  }
+
+  .flow-live-pill{
+    display:none;
+  }
+
+  .stats-grid{
+    gap:9px!important;
+  }
+
+  .stat-card{
+    min-height:82px;
+    padding:14px!important;
+  }
+
+  .stat-card strong{
+    font-size:23px!important;
+  }
+
+  .card{
+    border-radius:15px!important;
+    padding:14px!important;
+  }
+}
+
+/* Scrollbar */
+*{
+  scrollbar-color:#334155 transparent;
+  scrollbar-width:thin;
+}
+*::-webkit-scrollbar{width:8px;height:8px}
+*::-webkit-scrollbar-track{background:transparent}
+*::-webkit-scrollbar-thumb{
+  background:#334155;
+  border-radius:999px;
+}
+*::-webkit-scrollbar-thumb:hover{background:#475569}

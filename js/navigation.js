@@ -16,6 +16,21 @@ function switchTab(tab) {
   const activeNav = document.getElementById("nav-" + tab);
   if (activePage) activePage.classList.remove("hidden");
   if (activeNav) activeNav.classList.add("active");
+
+  const activeSectionLabel = document.getElementById("activeSectionLabel");
+  if (activeSectionLabel) {
+    const rawLabel = String(activeNav?.textContent || tab || "İşlem")
+      .replace(/\d+/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    activeSectionLabel.textContent = rawLabel || "İşlem";
+  }
+
+  if (activePage) {
+    activePage.classList.remove("flow-page-enter");
+    void activePage.offsetWidth;
+    activePage.classList.add("flow-page-enter");
+  }
   updateStaffMeta(staff.name, { lastSeenAt: new Date().toISOString(), role: staff.role });
   renderUsersList();
 if (tab === "operation") {
@@ -101,7 +116,7 @@ async function changeOwnPassword() {
 }
 window.changeOwnPassword = changeOwnPassword;
 
-const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-13.0";
+const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-14.0";
 let deferredPwaInstallPrompt = null;
 let pwaUpdateCheckRunning = false;
 
@@ -192,7 +207,7 @@ async function registerPwaServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
 
   const registration = await navigator.serviceWorker.register(
-    "./sw.js?v=13.0",
+    "./sw.js?v=14.0",
     { updateViaCache: "none" }
   );
 

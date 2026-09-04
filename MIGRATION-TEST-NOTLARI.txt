@@ -111,3 +111,14 @@ v13.0:
 - Güncelleme sırasında sadece garage-stock-* cache'leri temizlenir; başka service worker/cache'lere dokunulmaz.
 - Yeni sürüm kontrolü açılışta, dakikada bir, uygulamaya geri dönünce ve internet gelince çalışır.
 - Güncelleme bildirimi sağ altta kalır; kullanıcı "Güncelle" dediğinde yeni sürüm temiz cache ile açılır.
+
+v14.0 - GarageFlow UI:
+- Masaüstünde sekmeler GarageFlow tarzı sol navigasyona taşındı.
+- Mobil/tablette sekmeler üstte yatay hızlı şerit olarak çalışır.
+- Header GarageFlow · Stok görünümüne geçirildi.
+- Aktif bölüm adı header içinde canlı güncellenir.
+- PostgreSQL canlı durum rozeti eklendi.
+- Dashboard kartları, formlar, tablolar ve butonlar görsel olarak cilalandı.
+- Aktif sayfada hafif geçiş animasyonu eklendi.
+- İşlevsel API/Excel/Stok kodlarına dokunulmadı; bu sürüm ağırlıklı UI cilasıdır.
+- v13 Güncelle sistemi v14 version.json sürümünü otomatik algılayabilir.
