@@ -138,3 +138,10 @@ v14.2:
 - Önceki CSS overflow yamalarının neden etkisiz kaldığı bu yapısal hataydı.
 - Kategori Değerleri desktop sol menü hizası eski center kuralında doğrudan düzeltildi.
 - Mobil/tablette kategori sekmesi üst şeritte ortalı kalır.
+
+v14.3:
+- GarageFlow masaüstü header çakışması düzeltildi.
+- appShell zaten sol menü için padding bıraktığından topbar üzerindeki negatif margin ve ekstra genişlik kaldırıldı.
+- Header artık içerik kolonu ile aynı hizada başlar; sol menünün üstüne binmez ve gereksiz sağa kaymaz.
+- Mobil/tablet navigasyon davranışına dokunulmadı.
+- İşlevsel PostgreSQL/JWT/Excel/Stok kodlarına dokunulmadı; yalnızca UI hotfix + cache/version bump yapıldı.
