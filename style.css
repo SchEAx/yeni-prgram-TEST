@@ -1507,3 +1507,139 @@ tbody tr:hover{
   border-radius:999px;
 }
 *::-webkit-scrollbar-thumb:hover{background:#475569}
+
+
+/* ==========================================================
+   GarageFlow v14.1 - taşma / sol menü düzeltmeleri
+   ========================================================== */
+
+html,
+body{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden!important;
+}
+
+/* Grid/flex içeriği viewport'u büyütmesin. */
+.app-shell,
+.stats-grid,
+.page,
+.page > section,
+.card,
+.grid-2,
+.form-grid,
+.section-head,
+.section-head > *,
+.management-tool-card,
+.management-tool-content,
+.users-permission-grid,
+.permission-editor,
+.permission-role-card,
+.permission-check-grid,
+.theme-picker,
+.category-value-summary,
+.category-price-update-grid,
+.stock-filter-row,
+.category-order-grid,
+.movement-list,
+.movement-item,
+.movement-top,
+.row-gap{
+  min-width:0!important;
+  max-width:100%;
+}
+
+/* Geniş tablolar sayfayı değil kendi kutusunu kaydırsın. */
+.table-wrap{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:auto!important;
+  overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* Uzun metinler kartı sağa itemesin. */
+.movement-item,
+.movement-item *,
+.user-row,
+.user-row *,
+.permission-role-card,
+.permission-role-card *,
+.management-tool-content,
+.management-tool-content *{
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+/* Kullanıcılar / yetkiler */
+.users-permission-grid{
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;
+}
+
+.permission-editor{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+
+/* Ayarlar / kategori fiyat formu */
+.category-price-update-grid,
+.password-change-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+
+.theme-picker{
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+}
+
+/* Sipariş önerisi filtreleri ekranı büyütmesin. */
+.order-filter-row{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+
+.order-filter-row .search-input{
+  min-width:0!important;
+  max-width:none!important;
+  width:100%!important;
+}
+
+/* Kategori Değerleri: v10'dan kalan ortalama zorlamasını desktopta iptal et. */
+@media(min-width:1080px){
+  .migration-test-mode #nav-categoryValues:not(.hidden){
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-start!important;
+    text-align:left!important;
+    width:100%!important;
+  }
+
+  .app-shell > .stats-grid,
+  .app-shell > .page{
+    width:100%;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+}
+
+/* Dar ekranlarda tüm problemli gridler tek kolon. */
+@media(max-width:1079px){
+  .users-permission-grid,
+  .permission-editor,
+  .category-price-update-grid,
+  .password-change-grid,
+  .order-filter-row{
+    grid-template-columns:1fr!important;
+  }
+
+  .theme-picker{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:560px){
+  .theme-picker{
+    grid-template-columns:1fr!important;
+  }
+}

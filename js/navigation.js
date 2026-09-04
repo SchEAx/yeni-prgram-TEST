@@ -31,6 +31,10 @@ function switchTab(tab) {
     void activePage.offsetWidth;
     activePage.classList.add("flow-page-enter");
   }
+
+  // Geniş içerikten kalan yatay body scroll sabit GarageFlow menüsünü bozmasın.
+  document.documentElement.scrollLeft = 0;
+  document.body.scrollLeft = 0;
   updateStaffMeta(staff.name, { lastSeenAt: new Date().toISOString(), role: staff.role });
   renderUsersList();
 if (tab === "operation") {
@@ -116,7 +120,7 @@ async function changeOwnPassword() {
 }
 window.changeOwnPassword = changeOwnPassword;
 
-const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-14.0";
+const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-14.1";
 let deferredPwaInstallPrompt = null;
 let pwaUpdateCheckRunning = false;
 
@@ -207,7 +211,7 @@ async function registerPwaServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
 
   const registration = await navigator.serviceWorker.register(
-    "./sw.js?v=14.0",
+    "./sw.js?v=14.1",
     { updateViaCache: "none" }
   );
 

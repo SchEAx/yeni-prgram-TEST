@@ -122,3 +122,12 @@ v14.0 - GarageFlow UI:
 - Aktif sayfada hafif geçiş animasyonu eklendi.
 - İşlevsel API/Excel/Stok kodlarına dokunulmadı; bu sürüm ağırlıklı UI cilasıdır.
 - v13 Güncelle sistemi v14 version.json sürümünü otomatik algılayabilir.
+
+v14.1:
+- Üstte sürekli duran Güncelle butonu kaldırıldı; yalnızca yeni sürüm varsa sağ alttaki bildirim görünür.
+- Kategori Değerleri sol menü yazısı sola hizalandı.
+- Kategori Değerleri, Sipariş Önerisi, Ayarlar, Kullanıcılar ve Loglar sayfalarında yatay body taşması engellendi.
+- Geniş tablolar yalnızca kendi table-wrap alanında yatay kayar.
+- Kullanıcı / yetki ve form gridleri minmax(0,...) ile viewport içine kilitlendi.
+- Uzun log ve kullanıcı metinleri kartları genişletemez.
+- Sekme değişiminde olası yatay body scroll sıfırlanır.
