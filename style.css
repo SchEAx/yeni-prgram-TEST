@@ -906,7 +906,6 @@ th,td{color:var(--text)!important;border-color:var(--border)!important}
 .migration-test-mode #nav-categoryValues,
 .migration-test-mode #nav-management,
 .migration-test-mode #nav-surveys,
-.migration-test-mode #nav-logs,
 .migration-test-mode button[onclick^="assignBarcodeToStockGroup"] { display:none !important; }
 /* Excel toplu yazma henüz PostgreSQL API'ye taşınmadı. */
 .migration-test-mode #page-add .excel-panel { display:none !important; }
@@ -930,3 +929,7 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
 .migration-staff-editor-row{grid-template-columns:minmax(130px,1fr) minmax(150px,1.2fr) 120px minmax(170px,1.2fr) auto!important}
 .migration-staff-editor-row input,.migration-staff-editor-row select{min-width:0}
 @media(max-width:900px){.migration-staff-editor-row{grid-template-columns:1fr!important}.migration-staff-editor-row .btn{width:100%}}
+
+
+/* Migration Test v9.3 - Loglar artık taşındı; eski safety-lock tarafından gizlenmemeli. */
+.migration-test-mode #nav-logs:not(.hidden){display:block!important;}

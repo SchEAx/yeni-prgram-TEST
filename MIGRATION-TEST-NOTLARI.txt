@@ -64,3 +64,6 @@ v9.1 hotfix: Loglar sekmesi MIGRATION_ALLOWED_TABS listesine eklendi.
 
 
 v9.2: Loglar sekmesi için PWA/service-worker cache-busting düzeltmesi.
+
+
+v9.3: Loglar butonunu CSS safety-lock içinde gizleyen eski #nav-logs kuralı kaldırıldı; style.css cache-bust + SW cache sürümü 9.3 yapıldı.
