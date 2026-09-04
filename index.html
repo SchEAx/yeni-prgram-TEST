@@ -18,7 +18,7 @@
 </script>
 <link href="/logo.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
-<link href="style.css?v=10.2" rel="stylesheet"/>
+<link href="style.css?v=11.0" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -578,12 +578,20 @@ LED" rows="8"></textarea>
 <div class="management-tool-icon">🧹</div>
 <div class="management-tool-content">
 <h3>Toplu Ürün Temizleme</h3>
-<p class="muted">Excel'de <b>Araç Markası</b> alanına <b>SİLİNECEK</b> yazıp yüklediğin ürünleri tek tuşla kalıcı siler.</p>
+<p class="muted">Excel'de veya ürün düzenlemede <b>Ürün Markası</b> alanına <b>SİLİNECEK</b> yazılan ürünleri kalıcı olarak temizler. İşlemden önce bağlı kayıtların tamamı önizlenir.</p>
 <div class="delete-marked-counter">
 <span>SİLİNECEK ürün</span>
 <strong id="deleteMarkedCount">0</strong>
 </div>
 <div class="muted management-info" id="deleteMarkedInfo">Sayı kontrol edilmedi.</div>
+<div class="delete-marked-preview-grid hidden" id="deleteMarkedPreviewDetails">
+  <div><span>Stok Hareketi</span><strong id="deleteMarkedMovementCount">0</strong></div>
+  <div><span>Rezervasyon</span><strong id="deleteMarkedReservationCount">0</strong></div>
+  <div><span>Sipariş Havuzu</span><strong id="deleteMarkedDraftCount">0</strong></div>
+  <div><span>Verilmiş Sipariş Kalemi</span><strong id="deleteMarkedPurchaseItemCount">0</strong></div>
+  <div><span>Toplam Stok</span><strong id="deleteMarkedStockCount">0</strong></div>
+  <div><span>Rezerve Stok</span><strong id="deleteMarkedReservedCount">0</strong></div>
+</div>
 <div class="row-gap management-actions">
 <button class="btn secondary" onclick="loadDeleteMarkedCount()" type="button">Tekrar Kontrol Et</button>
 <button class="btn danger" disabled="" id="deleteMarkedProductsBtn" onclick="deleteMarkedProducts()" type="button">Kalıcı Olarak Sil</button>
@@ -777,7 +785,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=10.2"></script>
+<script src="js/core.js?v=11.0"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -786,11 +794,11 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=10.2"></script>
+<script src="js/navigation.js?v=11.0"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=10.2"></script>
-<script src="js/events.js?v=10.2"></script>
+<script src="js/migration-api.js?v=11.0"></script>
+<script src="js/events.js?v=11.0"></script>
 <script src="js/excel.js"></script>
-<script src="app.js?v=10.2"></script>
+<script src="app.js?v=11.0"></script>
 </body>
 </html>

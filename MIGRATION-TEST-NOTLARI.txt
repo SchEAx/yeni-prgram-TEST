@@ -73,3 +73,13 @@ v10.1: Kategori Değerleri PostgreSQL /api/category-values üzerinden aktif edil
 v10.1: Kategori Değerleri sekme hizası küçük ekranlarda ortalandı. Kategori tablosuna Ürünleri Düzenle eklendi; ürün bazlı Alış Fiyatı ve Ortalama Satış Fiyatı modal üzerinden PostgreSQL ürün PATCH API ile düzenlenebilir. İlk 100 sonuç gösterilir, aramayla daraltılır.
 
 v10.2: Toplu fiyat güncellemede sabit tutar için negatif değer desteklendi. Örn. -5000 girildiğinde seçili fiyatlardan 5000 TL düşer; sonuç 0 TL altına inemez. Yüzde modu şimdilik yalnızca pozitif artış kabul eder.
+
+v11.0:
+- Yönetim sekmesi migration-testte açıldı (admin).
+- Toplu silme artık Supabase yerine PostgreSQL API kullanıyor.
+- Hedef alan Ürün Markası = SİLİNECEK.
+- Önizlemede ürün, hareket, rezervasyon, sipariş havuzu, verilmiş sipariş kalemi, stok ve rezerve stok sayıları gösterilir.
+- İki aşamalı onay vardır; ikinci aşamada SİLİNECEK yazılması gerekir.
+- Silme logunu server üretir; frontend çift log oluşturmaz.
+- Eski Araç Markası = SİLİNECEK kayıtları hedeflenmez.
+- Kategori/Ürün Markası tam sayım listesi eksik state verisi göstermemesi için Excel/API geçişine kadar migration-testte kapalıdır.

@@ -449,6 +449,19 @@ function computeCategoryBrandRows() {
   );
 }
 function renderCategoryBrandManagement() {
+  if (typeof MIGRATION_TEST_MODE !== "undefined" && MIGRATION_TEST_MODE) {
+    if (el.managementCategoryBrandSummary) {
+      el.managementCategoryBrandSummary.innerHTML = `
+        <div class="empty-state">Kategori / marka tam sayımı Excel modülü taşındıktan sonra PostgreSQL API üzerinden açılacak.</div>
+      `;
+    }
+    if (el.managementCategoryBrandList) {
+      el.managementCategoryBrandList.innerHTML = `
+        <div class="empty-state">Migration testte bu liste geçici olarak kapalı. SİLİNECEK toplu temizleme aracı aktiftir.</div>
+      `;
+    }
+    return;
+  }
   const rows = computeCategoryBrandRows();
   const totalProductCards = rows.reduce((s,r) => s + Number(r.productCount || 0), 0);
   const totalStockQty = rows.reduce((s,r) => s + Number(r.stockQty || 0), 0);

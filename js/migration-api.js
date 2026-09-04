@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "users", "settings", "logs"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "management", "users", "settings", "logs"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }
@@ -1892,3 +1892,169 @@ window.resetRolePermissions = async function() {
 };
 
 // Settings sekmesi sadece tema/yerel görüntü ayarlarını kullanır; Supabase yazma çağrıları migration testte yoktur.
+
+
+// ---- v11 Yönetim / SİLİNECEK toplu ürün temizleme ----
+state.migrationDeleteMarkedPreview = state.migrationDeleteMarkedPreview || null;
+
+function renderMigrationDeleteMarkedPreview(preview) {
+  const p = preview || {};
+  const countEl = document.getElementById("deleteMarkedCount");
+  const infoEl = document.getElementById("deleteMarkedInfo");
+  const detailsEl = document.getElementById("deleteMarkedPreviewDetails");
+  const deleteBtn = document.getElementById("deleteMarkedProductsBtn");
+
+  const productCount = Number(p.product_count || 0);
+  if (countEl) countEl.textContent = String(productCount);
+
+  const values = {
+    deleteMarkedMovementCount: Number(p.movement_count || 0),
+    deleteMarkedReservationCount: Number(p.reservation_count || 0),
+    deleteMarkedDraftCount: Number(p.draft_item_count || 0),
+    deleteMarkedPurchaseItemCount: Number(p.purchase_item_count || 0),
+    deleteMarkedStockCount: Number(p.total_stock || 0),
+    deleteMarkedReservedCount: Number(p.total_reserved || 0)
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = String(value);
+  });
+
+  if (detailsEl) detailsEl.classList.toggle("hidden", productCount <= 0);
+
+  if (infoEl) {
+    infoEl.textContent = productCount
+      ? `${productCount} ürün kalıcı silmeye hazır. Yalnızca Ürün Markası "SİLİNECEK" olanlar silinecek.`
+      : `Ürün Markası "SİLİNECEK" olan ürün bulunamadı.`;
+  }
+
+  if (deleteBtn) deleteBtn.disabled = productCount <= 0;
+}
+
+loadDeleteMarkedCount = async function() {
+  const countEl = document.getElementById("deleteMarkedCount");
+  const infoEl = document.getElementById("deleteMarkedInfo");
+  const detailsEl = document.getElementById("deleteMarkedPreviewDetails");
+  const deleteBtn = document.getElementById("deleteMarkedProductsBtn");
+
+  if (countEl) countEl.textContent = "...";
+  if (infoEl) infoEl.textContent = "SİLİNECEK ürünler ve bağlı kayıtlar kontrol ediliyor...";
+  if (detailsEl) detailsEl.classList.add("hidden");
+  if (deleteBtn) deleteBtn.disabled = true;
+
+  try {
+    const payload = await apiFetch("/api/management/delete-marked/preview");
+    const preview = payload.preview || {};
+    state.migrationDeleteMarkedPreview = preview;
+    renderMigrationDeleteMarkedPreview(preview);
+    return Number(preview.product_count || 0);
+  } catch (err) {
+    state.migrationDeleteMarkedPreview = null;
+    if (countEl) countEl.textContent = "!";
+    if (infoEl) infoEl.textContent = err.message || "SİLİNECEK ürün önizlemesi alınamadı.";
+    showToast(err.message || "SİLİNECEK ürün önizlemesi alınamadı", true);
+    return 0;
+  }
+};
+window.loadDeleteMarkedCount = loadDeleteMarkedCount;
+
+deleteMarkedProducts = async function() {
+  if (!requireRoleAction(["admin"], "Toplu silme işlemini sadece Admin yapabilir")) return;
+
+  const deleteBtn = document.getElementById("deleteMarkedProductsBtn");
+  const infoEl = document.getElementById("deleteMarkedInfo");
+
+  try {
+    const count = await loadDeleteMarkedCount();
+    const preview = state.migrationDeleteMarkedPreview || {};
+    if (!count) return;
+
+    const summary = [
+      `${count} ürün kalıcı olarak silinecek.`,
+      `Stok hareketi: ${Number(preview.movement_count || 0)}`,
+      `Rezervasyon: ${Number(preview.reservation_count || 0)}`,
+      `Sipariş havuzu: ${Number(preview.draft_item_count || 0)}`,
+      `Verilmiş sipariş kalemi: ${Number(preview.purchase_item_count || 0)}`,
+      `Toplam stok: ${Number(preview.total_stock || 0)}`,
+      `Rezerve stok: ${Number(preview.total_reserved || 0)}`,
+      "",
+      `Yalnızca Ürün Markası "SİLİNECEK" olan kayıtlar hedeflenir.`,
+      `Bu işlem geri alınamaz.`
+    ].join("\n");
+
+    const firstOk = await appConfirm(summary, {
+      title: "SİLİNECEK Ürünleri Önizle",
+      okText: "Devam Et",
+      cancelText: "Vazgeç",
+      danger: true
+    });
+    if (!firstOk) return;
+
+    const typed = await appPrompt(
+      `Son onay için SİLİNECEK yaz.`,
+      "",
+      {
+        title: "Kalıcı Silme Onayı",
+        placeholder: "SİLİNECEK",
+        okText: "Kalıcı Olarak Sil",
+        cancelText: "İptal",
+        danger: true
+      }
+    );
+    if (typed === null) return;
+
+    const normalized = String(typed || "").trim().toLocaleUpperCase("tr-TR");
+    if (!["SİLİNECEK", "SILINECEK"].includes(normalized)) {
+      return showToast('Onay için "SİLİNECEK" yazmalısın', true);
+    }
+
+    if (deleteBtn) deleteBtn.disabled = true;
+    if (infoEl) infoEl.textContent = "Toplu silme uygulanıyor...";
+
+    const payload = await apiFetch("/api/management/delete-marked/apply", {
+      method: "POST",
+      body: {
+        confirm_count: count,
+        confirm_text: "SİLİNECEK"
+      }
+    });
+
+    const r = payload.result || {};
+
+    // Server-side işlem logu zaten oluşuyor; burada ikinci bir log üretmiyoruz.
+    state.migrationDeleteMarkedPreview = null;
+    state.products = (state.products || []).filter(p =>
+      String(p.productBrand || "").trim().toLocaleUpperCase("tr-TR") !== "SİLİNECEK" &&
+      String(p.productBrand || "").trim().toUpperCase() !== "SILINECEK"
+    );
+    state.operationFilterOptionsLoaded = false;
+    state.operationCacheKey = "";
+
+    await Promise.allSettled([
+      loadDashboardStats(),
+      loadMovements(),
+      loadOperationFilterOptions()
+    ]);
+
+    if (typeof updateStats === "function") updateStats();
+    if (typeof refreshProductQuickLists === "function") refreshProductQuickLists();
+    if (typeof refreshOperationFilters === "function") refreshOperationFilters();
+    if (typeof renderOperationResults === "function") renderOperationResults();
+
+    await loadDeleteMarkedCount();
+
+    showToast(
+      `${Number(r.deleted_products || count)} ürün kalıcı silindi ✅`
+    );
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Toplu silme başarısız oldu", true);
+    await loadDeleteMarkedCount().catch(() => {});
+  } finally {
+    if (deleteBtn) {
+      const current = Number(state.migrationDeleteMarkedPreview?.product_count || 0);
+      deleteBtn.disabled = current <= 0;
+    }
+  }
+};
+window.deleteMarkedProducts = deleteMarkedProducts;
