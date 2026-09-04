@@ -903,7 +903,6 @@ th,td{color:var(--text)!important;border-color:var(--border)!important}
 @media(max-width:430px){.movement-audit-grid{grid-template-columns:1fr}}
 
 /* === Migration Test safety locks === */
-.migration-test-mode #nav-categoryValues,
 .migration-test-mode #nav-management,
 .migration-test-mode #nav-surveys,
 .migration-test-mode button[onclick^="assignBarcodeToStockGroup"] { display:none !important; }
@@ -933,3 +932,6 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
 
 /* Migration Test v9.3 - Loglar artık taşındı; eski safety-lock tarafından gizlenmemeli. */
 .migration-test-mode #nav-logs:not(.hidden){display:block!important;}
+
+/* Migration Test v10 - Kategori Değerleri artık PostgreSQL API üzerinde aktif. */
+.migration-test-mode #nav-categoryValues:not(.hidden){display:inline-flex!important;}

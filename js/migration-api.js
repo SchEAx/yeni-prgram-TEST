@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "orderSuggestion", "add", "requests", "purchaseOrders", "users", "settings", "logs"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "users", "settings", "logs"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }
@@ -228,6 +228,217 @@ loadActivityLogs = async function() {
   }
 };
 window.loadActivityLogs = loadActivityLogs;
+
+
+// ---- Kategori değerleri + toplu fiyat (PostgreSQL API) ----
+function migrationCategoryValueRow(row) {
+  return {
+    category: String(row?.category || "Kategorisiz"),
+    qty: Number(row?.total_stock || 0),
+    productCount: Number(row?.product_count || 0),
+    purchase: Number(row?.average_purchase || 0),
+    sale: Number(row?.average_sale || 0),
+    totalPurchase: Number(row?.total_purchase_value || 0),
+    totalSale: Number(row?.total_sale_value || 0),
+    estimatedDiff: Number(row?.estimated_difference || 0),
+    zeroPurchaseCount: Number(row?.zero_purchase_count || 0),
+    zeroSaleCount: Number(row?.zero_sale_count || 0),
+    pricedProductCount: Number(row?.priced_product_count || 0),
+    hasPrice: Number(row?.priced_product_count || 0) > 0
+  };
+}
+
+computeCategoryValueRows = function() {
+  return Array.isArray(state.categoryValueRows) ? state.categoryValueRows : [];
+};
+
+loadCategoryValues = async function() {
+  const payload = await apiFetch('/api/category-values');
+  state.categoryValues = Array.isArray(payload?.rows) ? payload.rows : [];
+  state.categoryValueRows = state.categoryValues
+    .map(migrationCategoryValueRow)
+    .sort((a, b) => a.category.localeCompare(b.category, 'tr'));
+
+  renderCategoryValues();
+
+  const isAdmin = currentStaff().role === 'admin';
+  [el.bulkPriceCategory, el.bulkPriceField, el.bulkPriceMode, el.bulkPriceAmount].forEach(node => {
+    if (node) node.disabled = !isAdmin;
+  });
+  const applyBtn = document.querySelector('#page-categoryValues button[onclick="applyCategoryPriceUpdate()"]');
+  if (applyBtn) applyBtn.disabled = !isAdmin;
+  if (!isAdmin && el.bulkPricePreview) {
+    el.bulkPricePreview.textContent = 'Toplu fiyat güncelleme sadece Admin tarafından yapılabilir.';
+  }
+
+  return state.categoryValueRows;
+};
+window.loadCategoryValues = loadCategoryValues;
+
+let migrationPricePreviewTimer = null;
+let migrationLastPricePreview = null;
+
+function migrationPriceRequestBody() {
+  return {
+    category: String(el.bulkPriceCategory?.value || '').trim(),
+    field: String(el.bulkPriceField?.value || 'average_sale_price'),
+    mode: String(el.bulkPriceMode?.value || 'percent'),
+    amount: Number(el.bulkPriceAmount?.value || 0)
+  };
+}
+
+function migrationPriceFieldLabel(field) {
+  return field === 'purchase_price'
+    ? 'alış fiyatı'
+    : field === 'both'
+      ? 'alış ve satış fiyatları'
+      : 'ortalama satış fiyatı';
+}
+
+function migrationPriceIncreaseLabel(mode, amount) {
+  return mode === 'percent' ? `%${amount}` : formatTL(amount);
+}
+
+function migrationPricePreviewText(preview) {
+  const field = String(preview?.field || 'average_sale_price');
+  const mode = String(preview?.mode || 'percent');
+  const amount = Number(preview?.amount || 0);
+  const count = Number(preview?.affected_products || 0);
+  const zeroCount = field === 'purchase_price'
+    ? Number(preview?.zero_purchase_count || 0)
+    : field === 'average_sale_price'
+      ? Number(preview?.zero_sale_count || 0)
+      : Math.max(Number(preview?.zero_purchase_count || 0), Number(preview?.zero_sale_count || 0));
+
+  let currentText = '';
+  let nextText = '';
+  if (field === 'purchase_price') {
+    currentText = formatTL(preview?.current_purchase_value || 0);
+    nextText = formatTL(preview?.next_purchase_value || 0);
+  } else if (field === 'average_sale_price') {
+    currentText = formatTL(preview?.current_sale_value || 0);
+    nextText = formatTL(preview?.next_sale_value || 0);
+  } else {
+    currentText = `${formatTL(preview?.current_purchase_value || 0)} / ${formatTL(preview?.current_sale_value || 0)}`;
+    nextText = `${formatTL(preview?.next_purchase_value || 0)} / ${formatTL(preview?.next_sale_value || 0)}`;
+  }
+
+  const zeroNote = zeroCount
+    ? ` · ${zeroCount} üründe seçili fiyatlardan en az biri 0`
+    : '';
+  return `${count} ürün · ${migrationPriceFieldLabel(field)} ${migrationPriceIncreaseLabel(mode, amount)} · Stok değeri ${currentText} → ${nextText}${zeroNote}`;
+}
+
+updateBulkPricePreview = async function() {
+  if (!el.bulkPricePreview) return;
+  if (currentStaff().role !== 'admin') {
+    el.bulkPricePreview.textContent = 'Toplu fiyat güncelleme sadece Admin tarafından yapılabilir.';
+    return;
+  }
+
+  const body = migrationPriceRequestBody();
+  if (!body.category || !(body.amount > 0)) {
+    migrationLastPricePreview = null;
+    el.bulkPricePreview.textContent = 'Kategori ve tutar seçildiğinde işlem özeti burada görünür.';
+    return;
+  }
+
+  try {
+    el.bulkPricePreview.textContent = 'Önizleme hazırlanıyor...';
+    const payload = await apiFetch('/api/category-price-update/preview', {
+      method: 'POST',
+      body
+    });
+    migrationLastPricePreview = payload?.preview || null;
+    el.bulkPricePreview.textContent = migrationPricePreviewText(migrationLastPricePreview);
+    return migrationLastPricePreview;
+  } catch (err) {
+    migrationLastPricePreview = null;
+    el.bulkPricePreview.textContent = err.message || 'Önizleme alınamadı';
+    throw err;
+  }
+};
+window.updateBulkPricePreview = updateBulkPricePreview;
+
+function migrationSchedulePricePreview() {
+  clearTimeout(migrationPricePreviewTimer);
+  migrationPricePreviewTimer = setTimeout(() => {
+    updateBulkPricePreview().catch(() => {});
+  }, 350);
+}
+
+[el.bulkPriceCategory, el.bulkPriceField, el.bulkPriceMode].forEach(node => {
+  node?.addEventListener('change', migrationSchedulePricePreview);
+});
+el.bulkPriceAmount?.addEventListener('input', migrationSchedulePricePreview);
+
+applyCategoryPriceUpdate = async function() {
+  if (!requireRoleAction(['admin'], 'Toplu fiyat güncellemesini sadece Admin yapabilir')) return;
+
+  const body = migrationPriceRequestBody();
+  if (!body.category) return showToast('Önce kategori seç', true);
+  if (!(body.amount > 0)) return showToast("Artış miktarı 0'dan büyük olmalı", true);
+
+  try {
+    setLoading(true);
+    const previewPayload = await apiFetch('/api/category-price-update/preview', {
+      method: 'POST',
+      body
+    });
+    const preview = previewPayload?.preview;
+    if (!preview) throw new Error('Önizleme alınamadı');
+    migrationLastPricePreview = preview;
+    if (el.bulkPricePreview) el.bulkPricePreview.textContent = migrationPricePreviewText(preview);
+
+    const field = String(preview.field || body.field);
+    const zeroCount = field === 'purchase_price'
+      ? Number(preview.zero_purchase_count || 0)
+      : field === 'average_sale_price'
+        ? Number(preview.zero_sale_count || 0)
+        : Math.max(Number(preview.zero_purchase_count || 0), Number(preview.zero_sale_count || 0));
+    const zeroWarning = zeroCount
+      ? `\n\n${zeroCount} üründe seçili fiyatlardan en az biri 0. Yüzde artışta 0 kalır; sabit artışta tutar eklenir.`
+      : '';
+
+    const currentValue = field === 'purchase_price'
+      ? formatTL(preview.current_purchase_value || 0)
+      : field === 'average_sale_price'
+        ? formatTL(preview.current_sale_value || 0)
+        : `${formatTL(preview.current_purchase_value || 0)} alış / ${formatTL(preview.current_sale_value || 0)} satış`;
+    const nextValue = field === 'purchase_price'
+      ? formatTL(preview.next_purchase_value || 0)
+      : field === 'average_sale_price'
+        ? formatTL(preview.next_sale_value || 0)
+        : `${formatTL(preview.next_purchase_value || 0)} alış / ${formatTL(preview.next_sale_value || 0)} satış`;
+
+    const ok = await appConfirm(
+      `${preview.category} kategorisindeki ${Number(preview.affected_products || 0)} ürünün ${migrationPriceFieldLabel(field)} ${migrationPriceIncreaseLabel(preview.mode, preview.amount)} artırılacak.\n\nStok değeri: ${currentValue} → ${nextValue}${zeroWarning}\n\nDevam edilsin mi?`,
+      { title: 'Toplu fiyat güncelleme', okText: 'Güncelle' }
+    );
+    if (!ok) return;
+
+    const resultPayload = await apiFetch('/api/category-price-update/apply', {
+      method: 'POST',
+      body: {
+        ...body,
+        confirm_count: Number(preview.affected_products || 0)
+      }
+    });
+
+    const updated = Number(resultPayload?.result?.updated_products || 0);
+    showToast(`${updated} ürünün fiyatı güncellendi ✅`);
+    if (el.bulkPriceAmount) el.bulkPriceAmount.value = '';
+    migrationLastPricePreview = null;
+    await loadCategoryValues();
+    if (el.bulkPricePreview) el.bulkPricePreview.textContent = 'Kategori ve tutar seçildiğinde işlem özeti burada görünür.';
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Toplu fiyat güncellemesi başarısız oldu', true);
+  } finally {
+    setLoading(false);
+  }
+};
+window.applyCategoryPriceUpdate = applyCategoryPriceUpdate;
 
 // ---- Personel / rol okumaları ----
 loadStaffListFromSupabase = async function() {
