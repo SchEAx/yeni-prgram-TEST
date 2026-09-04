@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "management", "users", "settings", "logs"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "management", "users", "settings", "logs", "surveys"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }

@@ -145,3 +145,10 @@ v14.3:
 - Header artık içerik kolonu ile aynı hizada başlar; sol menünün üstüne binmez ve gereksiz sağa kaymaz.
 - Mobil/tablet navigasyon davranışına dokunulmadı.
 - İşlevsel PostgreSQL/JWT/Excel/Stok kodlarına dokunulmadı; yalnızca UI hotfix + cache/version bump yapıldı.
+
+
+=== v15.0 ===
+- Müşteri Memnuniyeti sekmesi migration-test modunda açıldı.
+- GarageFlow anket raporu Supabase yerine GET /api/customer-surveys üzerinden PostgreSQL okuyor.
+- Toplam anket sayısı API count alanından geliyor; ekranda son 200 kayıt analiz ediliyor.
+- Müşterinin halka açık anket formu henüz PostgreSQL yazımına geçirilmedi; bu aşama sadece GarageFlow yönetim ekranıdır.

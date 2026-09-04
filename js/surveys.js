@@ -5,14 +5,24 @@ async function loadCustomerSurveyStats() {
   box.innerHTML = `<div class="empty-state">Anket verileri yükleniyor...</div>`;
 
   try {
-    const { data, error } = await supabaseClient
-      .from("customer_surveys")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+    let rows = [];
+    let totalSurveyCount = 0;
 
-    if (error) throw error;
-    const rows = data || [];
+    if (typeof apiFetch === "function" && typeof MIGRATION_TEST_MODE !== "undefined" && MIGRATION_TEST_MODE) {
+      const payload = await apiFetch("/api/customer-surveys?limit=200&offset=0");
+      rows = Array.isArray(payload?.surveys) ? payload.surveys : [];
+      totalSurveyCount = Number(payload?.count ?? rows.length);
+    } else {
+      const { data, error } = await supabaseClient
+        .from("customer_surveys")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error) throw error;
+      rows = data || [];
+      totalSurveyCount = rows.length;
+    }
     const avg = (arr) => arr.length ? (arr.reduce((a, b) => a + Number(b || 0), 0) / arr.length).toFixed(2) : "0.00";
     const scoreKeys = ["q1", "q2", "q3", "q4", "q5", "q6", "q7", "q8"];
     const allScores = rows.flatMap(r => scoreKeys.map(k => Number(r[k] || 0)).filter(Boolean));
@@ -51,7 +61,7 @@ async function loadCustomerSurveyStats() {
 
     box.innerHTML = `
       <div class="survey-stats">
-        <div class="stat-card"><b>${rows.length}</b><span>Toplam Anket</span></div>
+        <div class="stat-card"><b>${totalSurveyCount}</b><span>Toplam Anket</span></div>
         <div class="stat-card"><b>${avg(allScores)}</b><span>Genel Ortalama</span></div>
         <div class="stat-card"><b>${problemRows.length}</b><span>Düşük Puanlı Kayıt</span></div>
         <div class="stat-card"><b>${contactRows.length}</b><span>Geri Dönüş İsteyen</span></div>

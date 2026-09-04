@@ -903,8 +903,8 @@ th,td{color:var(--text)!important;border-color:var(--border)!important}
 @media(max-width:430px){.movement-audit-grid{grid-template-columns:1fr}}
 
 /* === Migration Test safety locks === */
-.migration-test-mode #nav-surveys,
 .migration-test-mode button[onclick^="assignBarcodeToStockGroup"] { display:none !important; }
+/* v15: Müşteri Memnuniyeti PostgreSQL API üzerinden aktif. */
 /* v12: Excel paneli PostgreSQL API'ye taşındı ve migration-testte açık. */
 body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bottom:12px;z-index:99999;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:800;letter-spacing:.04em;pointer-events:none}
 
