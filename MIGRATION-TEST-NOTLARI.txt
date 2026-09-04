@@ -83,3 +83,13 @@ v11.0:
 - Silme logunu server üretir; frontend çift log oluşturmaz.
 - Eski Araç Markası = SİLİNECEK kayıtları hedeflenmez.
 - Kategori/Ürün Markası tam sayım listesi eksik state verisi göstermemesi için Excel/API geçişine kadar migration-testte kapalıdır.
+
+v12.0:
+- Excel paneli migration-testte yeniden açıldı.
+- Excel filtreleri PostgreSQL /api/excel/filter-options üzerinden gelir.
+- Barkodlu Excel ve Toplam Stok Excel /api/excel/products üzerinden tam stok listesini alır; state.products sınırına bağlı değildir.
+- Excel yükleme Supabase yerine /api/excel/import/preview + /api/excel/import/apply kullanır.
+- Önizleme; yeni/güncelleme, stok giriş/çıkış ve hata sayılarını gösterir.
+- Rezerve stok altına düşme, farklı üründe barkod çakışması ve yanlış confirm_count backend tarafından engellenir.
+- Yükleme tek transaction içinde uygulanır ve stok farkları giris/cikis hareketi olarak yazılır.
+- excel_stock_upload activity logunu backend oluşturur; frontend çift log yazmaz.

@@ -29,6 +29,11 @@ if (tab === "operation") {
   }
 }
 if (["add", "management"].includes(tab) && !state.products.length) { loadProducts().catch(err => showToast(err.message || "Ürünler yüklenemedi", true)); }
+if (tab === "add" && typeof loadMigrationExcelFilterOptions === "function") {
+  loadMigrationExcelFilterOptions().catch(err =>
+    showToast(err?.message || "Excel filtreleri alınamadı", true)
+  );
+}
 if (tab === "management") {
   const ready = state.products.length ? Promise.resolve() : loadProducts();
   ready.then(() => { renderCategoryBrandManagement(); loadDeleteMarkedCount(); }).catch(err => showToast(err.message || "Yönetim verileri yüklenemedi", true));
