@@ -33,3 +33,11 @@ v6.0:
 - Talepler sekmesi PostgreSQL/JWT API ile açıldı.
 - Ürün eşleştirme, rezervasyon ve rezerv iptali API üzerinden çalışır.
 - Talep rezervleri panelde listelenir.
+
+
+v7.0:
+- Sipariş Havuzu ve Verilen Siparişler PostgreSQL/JWT API ile açıldı.
+- Ürün kartından Siparişe Ekle, havuz miktarı/tedarikçi düzenleme ve tek tek kaldırma aktif.
+- Seçili kalemlerden sipariş oluşturma PostgreSQL trigger numarası (STYYMM000001) kullanır.
+- Kısmi giriş, tamamını al ve sipariş iptali API üzerinden çalışır.
+- Migration testte mevcut gerçek havuz kalemlerini korumak için Havuzu Temizle toplu işlemi kapalıdır.

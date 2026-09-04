@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "orderSuggestion", "add", "requests"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "orderSuggestion", "add", "requests", "purchaseOrders"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }
@@ -998,5 +998,218 @@ window.cancelReservation = async function(requestId) {
   } catch (err) {
     console.error(err);
     showToast(err.message || "Rezerv iptal edilemedi", true);
+  } finally { setLoading(false); }
+};
+
+
+// === Migration Test v7 - Sipariş Havuzu + Verilen Siparişler ===
+function migrationPurchaseDraftItem(row) {
+  return {
+    productId: row.product_id,
+    name: row.product_name || row.category || "Ürün",
+    productBrand: row.product_brand || "",
+    category: row.category || "",
+    detail: [
+      row.product_brand,
+      row.category,
+      row.vehicle_brand,
+      row.vehicle_model,
+      row.vehicle_type,
+      row.vehicle_year
+    ].filter(Boolean).join(" · "),
+    quantity: Number(row.quantity || 1),
+    supplierHint: row.supplier_hint || row.product_brand || "",
+    note: row.note || ""
+  };
+}
+
+loadSharedPurchaseOrderDraft = async function() {
+  if (!el.purchaseDraftList) return [];
+  try {
+    const payload = await apiFetch("/api/purchase-order-draft");
+    state.purchaseOrderDraft = (payload.items || []).map(migrationPurchaseDraftItem);
+    renderPurchaseOrderDraft();
+    return state.purchaseOrderDraft;
+  } catch (err) {
+    console.error(err);
+    el.purchaseDraftList.innerHTML = `<div class="empty-state">${escapeHtml(err.message || "Sipariş havuzu alınamadı")}</div>`;
+    throw err;
+  }
+};
+window.loadSharedPurchaseOrderDraft = loadSharedPurchaseOrderDraft;
+
+// Supabase Realtime yerine manuel yenileme kullanıyoruz.
+subscribeSharedPurchaseOrderDraft = function() {};
+window.subscribeSharedPurchaseOrderDraft = subscribeSharedPurchaseOrderDraft;
+
+window.addProductToPurchaseOrder = async function(productId) {
+  if (!requireUserAction("addToOrderPool", "Sipariş havuzuna ekleme yetkin yok")) return;
+  const p = purchaseProductById(productId);
+  if (!p) return showToast("Ürün bulunamadı", true);
+  if (!canAccessCategory(p.category)) return showToast("Bu ürün kategorisine yetkin yok", true);
+  const qty = Math.max(1, Math.floor(Number(getOperationQty(productId) || 1)));
+  try {
+    setLoading(true);
+    await apiFetch("/api/purchase-order-draft", {
+      method: "POST",
+      body: { product_id: productId, quantity: qty }
+    });
+    await loadSharedPurchaseOrderDraft();
+    showToast(`${p.name || p.category || "Ürün"} sipariş havuzuna eklendi ✅`);
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Ürün havuza eklenemedi", true);
+  } finally { setLoading(false); }
+};
+
+window.setPurchaseOrderItemQty = async function(productId, value) {
+  const qty = Math.max(1, Math.floor(Number(value || 1)));
+  try {
+    await apiFetch(`/api/purchase-order-draft/${encodeURIComponent(productId)}`, {
+      method: "PATCH",
+      body: { quantity: qty }
+    });
+    await loadSharedPurchaseOrderDraft();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Sipariş miktarı güncellenemedi", true);
+    await loadSharedPurchaseOrderDraft().catch(() => {});
+  }
+};
+
+window.setPurchaseDraftSupplier = async function(productId, value) {
+  try {
+    await apiFetch(`/api/purchase-order-draft/${encodeURIComponent(productId)}`, {
+      method: "PATCH",
+      body: { supplier_hint: String(value || "").trim() }
+    });
+    const row = state.purchaseOrderDraft.find(x => String(x.productId) === String(productId));
+    if (row) row.supplierHint = String(value || "").trim();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Tedarikçi güncellenemedi", true);
+  }
+};
+
+window.removePurchaseOrderItem = async function(productId) {
+  try {
+    setLoading(true);
+    await apiFetch(`/api/purchase-order-draft/${encodeURIComponent(productId)}`, {
+      method: "DELETE"
+    });
+    await loadSharedPurchaseOrderDraft();
+    showToast("Ürün sipariş havuzundan kaldırıldı");
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Ürün havuzdan kaldırılamadı", true);
+  } finally { setLoading(false); }
+};
+
+// Migration testte gerçek havuz kayıtları bulunduğu için toplu temizleme kapalı.
+window.clearPurchaseOrderDraft = async function() {
+  showToast("Migration testte havuzu toplu temizleme güvenlik nedeniyle kapalı. Ürünleri tek tek kaldırabilirsin.", true);
+};
+
+window.createGroupedPurchaseOrder = async function() {
+  const ids = selectedPurchaseGroupIds();
+  if (!ids.length) return showToast("En az bir ürün seç", true);
+  const supplier = String(el.purchaseGroupSupplier?.value || "").trim();
+  if (!supplier) return showToast("Tedarikçi adını yaz", true);
+  const expectedDate = String(el.purchaseGroupExpectedDate?.value || "").trim();
+  const note = String(el.purchaseGroupNote?.value || "").trim();
+  const selected = state.purchaseOrderDraft.filter(x => ids.includes(String(x.productId)));
+  if (!(await appConfirm(`${supplier} için ${selected.length} kalem sipariş oluşturulsun mu?`, { okText: "Sipariş Oluştur" }))) return;
+  try {
+    setLoading(true);
+    const payload = await apiFetch("/api/purchase-orders", {
+      method: "POST",
+      body: {
+        supplier,
+        expected_date: expectedDate || null,
+        note: note || null,
+        product_ids: ids
+      }
+    });
+    closePurchaseOrderGroupModal();
+    await Promise.all([loadSharedPurchaseOrderDraft(), loadPurchaseOrders()]);
+    showToast(`Sipariş oluşturuldu: ${payload.order?.order_no || "Yeni sipariş"} ✅`);
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Sipariş oluşturulamadı", true);
+  } finally { setLoading(false); }
+};
+window.savePurchaseOrder = window.createGroupedPurchaseOrder;
+
+loadPurchaseOrders = async function() {
+  if (!el.purchaseOrderList) return [];
+  try {
+    const payload = await apiFetch("/api/purchase-orders?limit=100");
+    state.purchaseOrders = payload.orders || [];
+    renderPurchaseOrders();
+    return state.purchaseOrders;
+  } catch (err) {
+    console.error(err);
+    el.purchaseOrderList.innerHTML = `<div class="empty-state">${escapeHtml(err.message || "Siparişler alınamadı")}</div>`;
+    throw err;
+  }
+};
+window.loadPurchaseOrders = loadPurchaseOrders;
+
+window.receivePurchaseOrderPartial = async function(orderId) {
+  const inputs = [...document.querySelectorAll(`[data-receive-order="${orderId}"]`)];
+  const lines = inputs
+    .map(x => ({ item_id: x.dataset.receiveItem, quantity: Math.floor(Number(x.value || 0)) }))
+    .filter(x => x.quantity > 0);
+  if (!lines.length) return showToast("Gelen adetleri yaz", true);
+  if (!(await appConfirm(`${lines.length} kalem için girilen miktarlar stoğa işlensin mi?`, { okText: "Stoğa İşle" }))) return;
+  try {
+    setLoading(true);
+    await apiFetch(`/api/purchase-orders/${encodeURIComponent(orderId)}/receive`, {
+      method: "POST",
+      body: { lines }
+    });
+    await Promise.allSettled([loadPurchaseOrders(), loadDashboardStats(), loadMovements()]);
+    showToast("Gelen ürünler stoğa işlendi ✅");
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Kısmi giriş yapılamadı", true);
+  } finally { setLoading(false); }
+};
+
+window.receivePurchaseOrderAll = async function(orderId) {
+  const order = state.purchaseOrders.find(o => String(o.id) === String(orderId));
+  if (!order) return showToast("Sipariş bulunamadı", true);
+  const remaining = (order.purchase_order_items || [])
+    .reduce((sum, i) => sum + Math.max(Number(i.ordered_quantity || 0) - Number(i.received_quantity || 0), 0), 0);
+  if (!remaining) return showToast("Bu siparişte bekleyen ürün yok", true);
+  if (!(await appConfirm(`Siparişte kalan toplam ${remaining} ürün stoğa işlensin mi?`, { okText: "Tamamını Al" }))) return;
+  try {
+    setLoading(true);
+    await apiFetch(`/api/purchase-orders/${encodeURIComponent(orderId)}/receive-all`, {
+      method: "POST"
+    });
+    await Promise.allSettled([loadPurchaseOrders(), loadDashboardStats(), loadMovements()]);
+    showToast("Siparişin kalanının tamamı stoğa işlendi ✅");
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Sipariş stoğa işlenemedi", true);
+  } finally { setLoading(false); }
+};
+window.receivePurchaseOrder = window.receivePurchaseOrderAll;
+
+window.cancelPurchaseOrder = async function(orderId) {
+  const order = state.purchaseOrders.find(o => String(o.id) === String(orderId));
+  if (!order) return showToast("Sipariş bulunamadı", true);
+  if (!(await appConfirm(`${order.order_no || "Sipariş"} iptal edilsin mi? Stok değişmeyecek.`, { danger: true, okText: "İptal Et" }))) return;
+  try {
+    setLoading(true);
+    await apiFetch(`/api/purchase-orders/${encodeURIComponent(orderId)}/cancel`, {
+      method: "PATCH"
+    });
+    await loadPurchaseOrders();
+    showToast("Sipariş iptal edildi");
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || "Sipariş iptal edilemedi", true);
   } finally { setLoading(false); }
 };
