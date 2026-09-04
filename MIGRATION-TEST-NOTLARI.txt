@@ -2,8 +2,8 @@ Garage İstanbul Stok - Migration Test Frontend
 
 API: https://api.scheax.com.tr/migration-test
 Auth: PostgreSQL app_users + JWT
-Açık ekranlar: İşlem, Hareketler, Kritik Stok
-Açık yazma: Manuel stok giriş / çıkış
+Açık ekranlar: İşlem, Hareketler, Kritik Stok, Sipariş Önerisi, Ürün Ekle, Talepler, Verilen Siparişler, Kullanıcılar / Yetkiler, Ayarlar
+Açık yazma: Stok giriş/çıkış, ürün CRUD/görsel, rezervasyon, sipariş havuzu/sipariş girişleri, kullanıcı/yetki yönetimi
 
 Güvenlik kilitleri:
 - Supabase SDK paketten çıkarıldı.
@@ -41,3 +41,13 @@ v7.0:
 - Seçili kalemlerden sipariş oluşturma PostgreSQL trigger numarası (STYYMM000001) kullanır.
 - Kısmi giriş, tamamını al ve sipariş iptali API üzerinden çalışır.
 - Migration testte mevcut gerçek havuz kalemlerini korumak için Havuzu Temizle toplu işlemi kapalıdır.
+
+
+v8.0:
+- Kullanıcılar / Yetkiler sekmesi PostgreSQL/JWT API ile açıldı.
+- Yeni personel oluşturma, kullanıcı adı/rol düzenleme, şifre reset ve güvenli pasife alma aktif.
+- Kategori ve işlem yetkileri app_users üzerinden kaydedilir.
+- Rol bazlı menü yetkileri app_settings.role_permissions üzerinden GET/PUT çalışır.
+- Kendi Admin hesabını pasifleştirme/rol düşürme backend tarafından engellenir.
+- Personel fiziksel silme ve toplu sıfırlama migration testte kapalıdır.
+- Ayarlar sekmesi tema/yerel görünüm için açıldı; Supabase yazma kullanılmaz.

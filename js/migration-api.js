@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "orderSuggestion", "add", "requests", "purchaseOrders"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "orderSuggestion", "add", "requests", "purchaseOrders", "users", "settings"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }
@@ -1213,3 +1213,251 @@ window.cancelPurchaseOrder = async function(orderId) {
     showToast(err.message || "Sipariş iptal edilemedi", true);
   } finally { setLoading(false); }
 };
+
+
+// ============================================================
+// Migration Test v8.0 - Kullanıcılar / Yetkiler / Ayarlar
+// ============================================================
+const migrationUserIdByUsername = new Map();
+
+function migrationUsernameKey(value) {
+  return String(value || "").trim().toLocaleLowerCase("tr-TR");
+}
+
+function migrationUserIdFor(staff) {
+  return migrationUserIdByUsername.get(migrationUsernameKey(staff?.username)) || "";
+}
+
+loadStaffListFromSupabase = async function() {
+  const payload = await apiFetch("/api/users");
+  migrationUserIdByUsername.clear();
+  const rows = (payload.users || []).filter(row => row?.is_active !== false);
+  rows.forEach(row => {
+    if (row?.username && row?.id) migrationUserIdByUsername.set(migrationUsernameKey(row.username), row.id);
+  });
+  const cleaned = cleanStaffList(rows.map(row => normalizeStaffItem({
+    authUserId: row.auth_user_id,
+    username: row.username,
+    name: row.name,
+    role: row.role,
+    isActive: row.is_active,
+    lastSeenAt: row.last_seen_at,
+    lastLoginAt: row.last_login_at,
+    allowedCategories: row.allowed_categories || [],
+    permissions: row.permissions || {}
+  })));
+  localStorage.setItem(STAFF_STORE_KEY, JSON.stringify(cleaned));
+  const freshCurrent = cleaned.find(x =>
+    (state.currentUser?.username && migrationUsernameKey(x.username) === migrationUsernameKey(state.currentUser.username)) ||
+    (state.currentUser?.name && normalizeText(x.name) === normalizeText(state.currentUser.name))
+  );
+  if (freshCurrent) state.currentUser = { ...state.currentUser, ...freshCurrent };
+  renderUsersList();
+  renderUserCategoryPermissions();
+  return cleaned;
+};
+
+renderUsersList = function() {
+  if (!el.usersList) return;
+  const staff = readStaffList();
+  if (!staff.length) {
+    el.usersList.innerHTML = `<div class="empty-state">Aktif personel bulunamadı</div>`;
+    return;
+  }
+  el.usersList.innerHTML = staff.map(s => {
+    const seen = s.lastSeenAt ? new Date(s.lastSeenAt).getTime() : 0;
+    const online = !!seen && Date.now() - seen < 2 * 60 * 1000;
+    return `<div class="user-row ${online ? "online" : ""}">
+      <div class="user-avatar">${escapeHtml((s.name || "?").slice(0,1).toLocaleUpperCase("tr-TR"))}</div>
+      <div>
+        <strong>${escapeHtml(s.name || "-")}</strong>
+        <div class="muted">@${escapeHtml(s.username || "-")} · ${escapeHtml(roleLabel(s.role))}</div>
+        <div class="muted">Son giriş: ${s.lastLoginAt ? formatDate(s.lastLoginAt) : "-"}</div>
+        <div class="muted">Son görünme: ${s.lastSeenAt ? formatDate(s.lastSeenAt) : "-"}</div>
+      </div>
+      <span class="user-status">${online ? "Çevrimiçi" : "Aktif"}</span>
+    </div>`;
+  }).join("");
+};
+window.renderUsersList = renderUsersList;
+
+function migrationStaffEditorRow(item = {}) {
+  const s = normalizeStaffItem(item);
+  const userId = migrationUserIdFor(s);
+  const isCurrent = migrationUsernameKey(s.username) === migrationUsernameKey(state.currentUser?.username);
+  return `<div class="staff-editor-row migration-staff-editor-row" data-staff-row data-user-id="${escapeHtml(userId)}">
+    <input data-staff-username value="${escapeHtml(s.username || "")}" placeholder="Kullanıcı adı" autocomplete="off" />
+    <input data-staff-name value="${escapeHtml(s.name || "")}" placeholder="Personel adı" />
+    <select data-staff-role>
+      <option value="admin" ${s.role === "admin" ? "selected" : ""}>Admin</option>
+      <option value="kasa" ${s.role === "kasa" ? "selected" : ""}>Kasa</option>
+      <option value="satis" ${s.role === "satis" ? "selected" : ""}>Satış</option>
+      <option value="depo" ${s.role === "depo" ? "selected" : ""}>Depo</option>
+      <option value="usta" ${s.role === "usta" ? "selected" : ""}>Usta</option>
+    </select>
+    <input data-staff-password type="password" value="" placeholder="${userId ? "Değiştirmek için yeni şifre" : "Yeni şifre (min. 4)"}" autocomplete="new-password" />
+    <button type="button" class="btn danger" ${isCurrent ? "disabled title=\"Kendi hesabını pasifleştiremezsin\"" : ""} onclick="migrationDeactivateStaffRow(this)">${userId ? "Pasife Al" : "Satırı Sil"}</button>
+  </div>`;
+}
+
+window.openStaffEditor = async function() {
+  if (!requireRoleAction(["admin"], "Personel yönetimi sadece Admin")) return;
+  if (!el.staffEditor || !el.staffEditorBody) return;
+  try {
+    setLoading(true);
+    await loadStaffListFromSupabase();
+    el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
+    setStaffEditorMessage("Personel değişiklikleri doğrudan PostgreSQL migration-test veritabanına kaydedilir.", "info");
+    el.staffEditor.classList.remove("hidden");
+  } catch (err) {
+    showToast(err?.message || "Personeller yüklenemedi", true);
+  } finally { setLoading(false); }
+};
+
+window.addStaffEditorRow = function() {
+  if (!el.staffEditorBody) return;
+  el.staffEditorBody.insertAdjacentHTML("beforeend", migrationStaffEditorRow({ name: "", username: "", role: "kasa" }));
+  setStaffEditorMessage("Yeni personel için kullanıcı adı, ad, rol ve en az 4 karakterli şifre gir.", "info");
+};
+
+window.migrationDeactivateStaffRow = async function(button) {
+  const row = button?.closest?.("[data-staff-row]");
+  if (!row) return;
+  const userId = String(row.dataset.userId || "").trim();
+  if (!userId) { row.remove(); return; }
+  const name = String(row.querySelector("[data-staff-name]")?.value || "Personel").trim();
+  if (!(await appConfirm(`${name} pasife alınsın mı? Artık giriş yapamayacak.`, { danger: true, okText: "Pasife Al" }))) return;
+  try {
+    setLoading(true);
+    await apiFetch(`/api/users/${encodeURIComponent(userId)}`, { method: "PATCH", body: { is_active: false } });
+    await loadStaffListFromSupabase();
+    el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
+    showToast(`${name} pasife alındı ✅`);
+  } catch (err) { showToast(err?.message || "Personel pasife alınamadı", true); }
+  finally { setLoading(false); }
+};
+
+window.saveStaffEditor = async function() {
+  if (!requireRoleAction(["admin"], "Personel yönetimi sadece Admin")) return;
+  const rows = [...(el.staffEditorBody?.querySelectorAll("[data-staff-row]") || [])];
+  if (!rows.length) return;
+  const saveButton = document.getElementById("saveStaffEditorBtn");
+  const seenUsers = new Set();
+  for (const row of rows) {
+    const username = String(row.querySelector("[data-staff-username]")?.value || "").trim();
+    const name = String(row.querySelector("[data-staff-name]")?.value || "").replace(/\s+/g," ").trim();
+    const role = String(row.querySelector("[data-staff-role]")?.value || "kasa");
+    const password = String(row.querySelector("[data-staff-password]")?.value || "");
+    const userId = String(row.dataset.userId || "").trim();
+    if (!username || username.length < 3) return setStaffEditorMessage("Her personel için en az 3 karakterli kullanıcı adı gerekli.", "error");
+    if (!/^[A-Za-z0-9._-]+$/.test(username)) return setStaffEditorMessage(`${username}: kullanıcı adında yalnızca harf, rakam, nokta, alt çizgi ve tire kullanılabilir.`, "error");
+    if (!name) return setStaffEditorMessage("Personel adı boş bırakılamaz.", "error");
+    const key = migrationUsernameKey(username);
+    if (seenUsers.has(key)) return setStaffEditorMessage(`${username} kullanıcı adı listede iki kez kullanılmış.`, "error");
+    seenUsers.add(key);
+    if (!userId && password.length < 4) return setStaffEditorMessage(`${name} için en az 4 karakterli şifre gir.`, "error");
+  }
+
+  try {
+    if (saveButton) { saveButton.disabled = true; saveButton.textContent = "Kaydediliyor…"; }
+    setStaffEditorMessage("Personel hesapları kaydediliyor…", "info");
+    for (const row of rows) {
+      const username = String(row.querySelector("[data-staff-username]")?.value || "").trim();
+      const name = String(row.querySelector("[data-staff-name]")?.value || "").replace(/\s+/g," ").trim();
+      const role = String(row.querySelector("[data-staff-role]")?.value || "kasa");
+      const password = String(row.querySelector("[data-staff-password]")?.value || "");
+      const userId = String(row.dataset.userId || "").trim();
+      if (userId) {
+        await apiFetch(`/api/users/${encodeURIComponent(userId)}`, { method: "PATCH", body: { username, name, role, is_active: true } });
+        if (password) await apiFetch(`/api/users/${encodeURIComponent(userId)}/password`, { method: "PATCH", body: { password } });
+      } else {
+        const created = await apiFetch("/api/users", { method: "POST", body: {
+          username, name, role, password, is_active: true,
+          allowed_categories: [],
+          permissions: { stockIn: true, stockOut: true, themeSettings: false, addToOrderPool: true }
+        }});
+        if (created?.user?.id) row.dataset.userId = created.user.id;
+      }
+    }
+    await loadStaffListFromSupabase();
+    renderStaffSelector();
+    renderUserCategoryPermissions();
+    el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
+    setStaffEditorMessage("Personel hesapları kaydedildi ✅", "info");
+    showToast("Personel hesapları kaydedildi ✅");
+  } catch (err) {
+    setStaffEditorMessage(err?.message || "Personel kaydedilemedi", "error");
+    showToast(err?.message || "Personel kaydedilemedi", true);
+  } finally {
+    if (saveButton) { saveButton.disabled = false; saveButton.textContent = "Kaydet"; }
+  }
+};
+
+window.resetStaffEditor = async function() {
+  showToast("Migration testte toplu personel sıfırlama güvenlik nedeniyle kapalı.", true);
+};
+
+window.saveUserCategoryPermissions = async function() {
+  if (!requireRoleAction(["admin"], "Kategori yetkilerini sadece Admin düzenleyebilir")) return;
+  try {
+    setLoading(true);
+    const list = readStaffList();
+    const cards = [...document.querySelectorAll('[data-user-permission-card]')];
+    for (const card of cards) {
+      const user = list.find(s => s.name === card.dataset.userPermissionCard);
+      if (!user) continue;
+      const userId = migrationUserIdFor(user);
+      if (!userId) continue;
+      const allowed_categories = [...card.querySelectorAll('[data-user-category]:checked')].map(x => x.value);
+      const permissions = {};
+      card.querySelectorAll('[data-user-action]').forEach(x => permissions[x.dataset.userAction] = x.checked);
+      await apiFetch(`/api/users/${encodeURIComponent(userId)}`, { method: "PATCH", body: { allowed_categories, permissions } });
+    }
+    await loadStaffListFromSupabase();
+    renderUserCategoryPermissions();
+    applyRoleVisibility();
+    await logActivity("user_category_permissions", "Personel kategori ve işlem yetkileri PostgreSQL'e kaydedildi", "app_users", "permissions");
+    showToast("Kategori ve işlem yetkileri kaydedildi ✅");
+  } catch (err) { showToast(err?.message || "Yetkiler kaydedilemedi", true); }
+  finally { setLoading(false); }
+};
+
+window.saveRolePermissions = async function() {
+  if (!requireRoleAction(["admin"], "Menü yetkilerini sadece Admin düzenleyebilir")) return;
+  const current = readRolePermissions();
+  ["depo", "kasa", "satis", "usta"].forEach(role => {
+    current[role] = [...document.querySelectorAll(`[data-role-permission="${role}"]:checked`)].map(input => input.value);
+  });
+  try {
+    setLoading(true);
+    const payload = await apiFetch("/api/settings/role-permissions", { method: "PUT", body: { value: current } });
+    const saved = normalizeRolePermissions(payload.setting?.value || current);
+    localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(saved));
+    applyRoleVisibility();
+    renderRolePermissionEditor();
+    showToast("Menü yetkileri kaydedildi ✅");
+  } catch (err) { showToast(err?.message || "Menü yetkileri kaydedilemedi", true); }
+  finally { setLoading(false); }
+};
+
+saveRolePermissionsToSupabase = async function(permissions) {
+  const payload = await apiFetch("/api/settings/role-permissions", { method: "PUT", body: { value: permissions } });
+  return payload.setting?.value || permissions;
+};
+
+window.resetRolePermissions = async function() {
+  if (!requireRoleAction(["admin"], "Menü yetkilerini sadece Admin sıfırlayabilir")) return;
+  if (!(await appConfirm("Menü yetkileri varsayılana dönsün mü?", { danger: true, okText: "Varsayılana Dön" }))) return;
+  try {
+    setLoading(true);
+    const defaults = normalizeRolePermissions(DEFAULT_ROLE_PERMISSIONS);
+    const saved = await saveRolePermissionsToSupabase(defaults);
+    localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalizeRolePermissions(saved)));
+    applyRoleVisibility();
+    renderRolePermissionEditor();
+    showToast("Menü yetkileri varsayılana döndü ✅");
+  } catch (err) { showToast(err?.message || "Menü yetkileri sıfırlanamadı", true); }
+  finally { setLoading(false); }
+};
+
+// Settings sekmesi sadece tema/yerel görüntü ayarlarını kullanır; Supabase yazma çağrıları migration testte yoktur.

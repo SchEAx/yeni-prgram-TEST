@@ -905,8 +905,6 @@ th,td{color:var(--text)!important;border-color:var(--border)!important}
 /* === Migration Test safety locks === */
 .migration-test-mode #nav-categoryValues,
 .migration-test-mode #nav-management,
-.migration-test-mode #nav-settings,
-.migration-test-mode #nav-users,
 .migration-test-mode #nav-surveys,
 .migration-test-mode #nav-logs,
 .migration-test-mode button[onclick^="assignBarcodeToStockGroup"] { display:none !important; }
@@ -926,3 +924,9 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
 /* Migration Test v7 - purchase safety */
 .migration-test-mode #page-purchaseOrders button[onclick="clearPurchaseOrderDraft()"]{display:none!important}
 .migration-purchase-warning{margin:10px 0 14px;padding:10px 12px;border:1px dashed var(--border);border-radius:12px;font-size:12px;font-weight:700;opacity:.85}
+
+
+/* Migration Test v8 - user management */
+.migration-staff-editor-row{grid-template-columns:minmax(130px,1fr) minmax(150px,1.2fr) 120px minmax(170px,1.2fr) auto!important}
+.migration-staff-editor-row input,.migration-staff-editor-row select{min-width:0}
+@media(max-width:900px){.migration-staff-editor-row{grid-template-columns:1fr!important}.migration-staff-editor-row .btn{width:100%}}
