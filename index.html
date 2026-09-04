@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+
+<html lang="tr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Stok Takip · Migration Test</title>
+<meta content="#111827" name="theme-color"/>
+<script>
+(function(){
+  try {
+    var saved = localStorage.getItem('garage_stock_theme') || 'garage-dark';
+    document.documentElement.setAttribute('data-theme', saved);
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'garage-dark');
+  }
+})();
+</script>
+<link href="/logo.png" rel="apple-touch-icon"/>
+<link href="manifest.webmanifest" rel="manifest"/>
+<link href="style.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="powered-badge">🧪 MIGRATION TEST · PostgreSQL/JWT · <span>GPT</span> &amp; <b>SchEAx</b></div>
+<div class="login-overlay" id="loginOverlay">
+<div class="login-card">
+<div class="login-logo-row">
+<img alt="Logo" onerror="this.style.display='none'" src="/logo.png"/>
+<div>
+<h1>Stok Takip</h1>
+<p class="muted">Personel girişi</p>
+</div>
+</div>
+<label>Kullanıcı adı</label>
+<input autocomplete="username" id="loginStaffSelect" placeholder="Örn: film.usta" type="text"/>
+<label>Şifre</label>
+<input autocomplete="current-password" id="loginPasswordInput" placeholder="Şifreni gir" type="password"/>
+<button class="btn primary full-btn" id="loginBtn" type="button">Giriş Yap</button>
+<div class="login-help">
+        Migration Test · PostgreSQL + JWT kullanıcı adı ve şifresi
+      </div>
+</div>
+</div>
+<div class="app-shell locked" id="appShell">
+<header class="topbar">
+<div class="brand-wrap">
+<img alt="Logo" class="app-logo" onerror="this.style.display='none'" src="/logo.png"/>
+<div>
+<h1>Stok Takip</h1>
+<p class="muted">Sade stok giriş / çıkış sistemi</p>
+</div>
+</div>
+<div class="top-actions">
+<div class="user-pill" id="activeUserPill">👤 <strong id="activeUserName">-</strong><span id="activeUserRole">-</span></div>
+
+
+<button class="btn secondary" id="refreshBtn">Yenile</button>
+<button class="btn danger" id="logoutBtn" type="button">Çıkış</button>
+</div>
+</header>
+<nav class="top-nav">
+<button id="nav-operation" onclick="switchTab('operation')">İşlem</button>
+
+
+<button id="nav-add" onclick="switchTab('add')">Ürün Ekle</button>
+<button id="nav-movements" onclick="switchTab('movements')">Hareketler</button>
+<button id="nav-critical" onclick="switchTab('critical')">Kritik Stok</button>
+<button id="nav-categoryValues" onclick="switchTab('categoryValues')">Kategori Değerleri</button>
+<button id="nav-orderSuggestion" onclick="switchTab('orderSuggestion')">Sipariş Önerisi</button>
+<button id="nav-purchaseOrders" onclick="switchTab('purchaseOrders')">Verilen Siparişler <span id="purchaseOrderBadge" class="nav-count hidden">0</span></button>
+<button id="nav-management" onclick="switchTab('management')">Yönetim</button>
+<button id="nav-settings" onclick="switchTab('settings')">Ayarlar</button>
+<button id="nav-users" onclick="switchTab('users')">Kullanıcılar</button>
+<button id="nav-surveys" onclick="switchTab('surveys')">Müşteri Memnuniyeti</button>
+<button id="nav-logs" onclick="switchTab('logs')">Loglar</button>
+</nav>
+<section class="stats-grid stats-grid-4">
+<div class="card stat-card"><span class="stat-label">Toplam Ürün</span><strong id="totalProductCount">0</strong></div>
+<div class="card stat-card"><span class="stat-label">Toplam Stok</span><strong id="totalStockCount">0</strong></div>
+<div class="card stat-card"><span class="stat-label">Rezerve Stok</span><strong id="reservedStockCount">0</strong></div>
+<div class="card stat-card danger"><span class="stat-label">Kritik Stok</span><strong id="criticalStockCount">0</strong></div>
+</section>
+
+
+<div class="page hidden" id="page-operation">
+<section class="card">
+<div class="section-head">
+<div>
+<h2>Hızlı Giriş / Çıkış</h2>
+<p class="muted">Ürün kartına girmeden marka, kategori ve model filtresiyle hızlı stok işlemi yap</p>
+</div>
+<button class="btn secondary" onclick="clearOperationFilters()">Filtreleri Temizle</button>
+</div>
+<div class="operation-filter-grid">
+<div>
+<label>Ürün Kategorisi</label>
+<select id="operationCategoryFilter">
+<option value="">Tüm kategoriler</option>
+</select>
+</div>
+<div>
+<label>Araç Markası</label>
+<select id="operationBrandFilter">
+<option value="">Tüm markalar</option>
+</select>
+</div>
+<div>
+<label>Model / Ürün Ara</label>
+<input autocomplete="off" id="operationSearchInput" placeholder="Megane 4, Egea, Clio..." type="text"/>
+</div>
+</div>
+<div class="operation-hint">
+<strong>İpucu:</strong> Marka + kategori seçip sadece modeli yazarsan sonuç listesi çok daralır. Örn: Renault + Paspas + Megane 4.<br/>
+<strong>Toplu stok:</strong> Aynı ürün farklı raflarda bulunuyorsa tek kartta toplam stok görünür; rafların giriş/çıkış işlemleri kartın altında ayrı ayrı kalır.
+        </div>
+<div class="operation-result-list" id="operationResultBox">
+<div class="empty-state">Filtre seç veya ürün ara</div>
+</div>
+</section>
+</div>
+<div class="page hidden" id="page-purchaseOrders">
+<section class="grid-2 purchase-order-grid">
+  <div class="card">
+    <div class="section-head"><div><h2>Sipariş Havuzu</h2><p class="muted">Ürünleri burada beklet; aynı tedarikçiye ait kalemleri seçip tek sipariş oluştur.</p></div><button class="btn secondary" type="button" onclick="clearPurchaseOrderDraft()">Havuzu Temizle</button></div>
+    <div class="purchase-pool-info">
+      <strong>Nasıl çalışır?</strong>
+      <span>Ürün kartından “Siparişe Ekle” dediğin kalemler burada ayrı ayrı bekler. Bir kalemde “Sipariş Oluştur” dediğinde aynı tedarikçiye ait diğer ürünleri de seçebilirsin.</span>
+    </div>
+    <div id="purchaseDraftList" class="movement-list"><div class="empty-state">Henüz siparişe ürün eklenmedi</div></div>
+    <div class="purchase-order-footer"><strong>Havuz toplamı: <span id="purchaseDraftTotal">0</span></strong><button class="btn success" id="savePurchaseOrderBtn" type="button" onclick="openPurchaseOrderGroupModal()">Seçerek Sipariş Oluştur</button></div>
+  </div>
+  <div class="card">
+    <div class="section-head"><div><h2>Oluşturulan Siparişler</h2><p class="muted">Kısmi gelen miktarları kalem kalem stoğa işle veya tamamını al.</p></div><button class="btn secondary" type="button" onclick="loadPurchaseOrders()">Yenile</button></div>
+    <div id="purchaseOrderList" class="movement-list"><div class="empty-state">Siparişler yükleniyor...</div></div>
+  </div>
+</section>
+</div>
+<div class="page hidden legacy-page" id="page-search">
+<section class="card">
+<div class="section-head">
+<div><h2>Ürün Listesi</h2><p class="muted">Ürün kategorisi, araç marka/model/tip/yıl ile ara</p></div>
+<input class="search-input" id="searchInput" placeholder="Megane, paspas, 2020, Rizline..." type="text"/>
+</div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Resim</th><th>Barkod</th><th>Ürün Markası</th><th>Ürün Kategorisi</th><th>Araç Markası</th><th>Araç Modeli</th><th>Araç Tipi</th><th>Model Yılı</th><th>Stok</th><th>Rezerve</th><th>Kullanılabilir</th><th>Min</th><th>Raf/Konum</th><th>İşlem</th></tr></thead>
+<tbody id="productTableBody"><tr><td class="empty-cell" colspan="14">Veri bekleniyor...</td></tr></tbody>
+</table>
+</div>
+</section>
+</div>
+<div class="page hidden" id="page-add">
+<section class="grid-2">
+<div class="card">
+<h2>Ürün Kartı</h2>
+<form class="form-grid" id="productForm">
+<input id="productId" type="hidden"/>
+<div><label>Barkod</label><input autocomplete="off" id="barcode" placeholder="Örn: 1000001" spellcheck="false" type="text"/></div>
+<div><label>Ürün Markası</label><input autocomplete="off" class="custom-suggest-input" id="productBrand" placeholder="Örn: Rizline" type="text"/></div>
+<div><label>Ürün Kategorisi *</label><input autocomplete="off" class="custom-suggest-input" id="category" placeholder="Örn: Paspas, Cam Rüzgarlığı" type="text"/></div>
+<div><label>Araç Markası *</label><input autocomplete="off" class="custom-suggest-input" id="carBrand" placeholder="Örn: Renault" type="text"/></div>
+<div><label>Araç Modeli *</label><input autocomplete="off" class="custom-suggest-input" id="carModel" placeholder="Örn: Megane 4" type="text"/></div>
+<div><label>Araç Tipi</label><input autocomplete="off" class="custom-suggest-input" id="carType" placeholder="Örn: HB / Sedan / SUV" type="text"/></div>
+<div><label>Araç Model Yılı</label><input autocomplete="off" class="custom-suggest-input" id="vehicleYear" placeholder="Örn: 2016-2020" type="text"/></div>
+<div><label>Mevcut Stok</label><input id="stock" min="0" placeholder="0" step="1" type="number"/></div>
+<div><label>Minimum Stok</label><input id="minStock" min="0" placeholder="0" step="1" type="number"/></div>
+<div><label>Alış Fiyatı</label><input id="productPurchasePrice" min="0" placeholder="Örn: 22500" step="0.01" type="number"/></div>
+<div><label>Ortalama Satış Fiyatı</label><input id="productAverageSalePrice" min="0" placeholder="Örn: 25000" step="0.01" type="number"/></div>
+<div><label>Raf / Konum</label><input autocomplete="off" class="custom-suggest-input" id="location" placeholder="Örn: A-12" type="text"/></div>
+<input id="productImage" type="hidden"/>
+<div class="full product-image-panel">
+<label>Ürün Resmi <span class="muted">(isteğe bağlı)</span></label>
+<div class="product-image-preview" id="productImagePreview"><div class="product-image-empty">📷<span>Resim yok</span></div></div>
+<div class="product-image-actions row-gap">
+<label class="btn secondary file-picker-label product-image-picker">🖼️ Galeriden Seç
+                  <input accept="image/*" class="native-file-input" id="productImageFile" onchange="handleProductImageFile(event)" type="file"/>
+</label>
+<button class="btn secondary product-image-picker" id="productCameraOpenBtn" onclick="openProductCamera()" type="button">📸 Kamerayı Aç</button>
+<button class="btn ghost" disabled="" id="productImageViewBtn" type="button">Resmi Gör</button>
+<button class="btn danger" disabled="" id="productImageRemoveBtn" type="button">Resmi Sil</button>
+</div>
+<div class="muted product-image-status" id="productImageStatus">Resim seçilmedi</div>
+<div class="muted product-image-hint">Yüklerken otomatik küçültülür. Veritabanında resim değil, sadece link tutulur.</div>
+</div>
+<div class="full"><label>Açıklama <span class="muted">(isteğe bağlı)</span></label><textarea id="note" placeholder="İsteğe bağlı not" rows="3"></textarea></div>
+<div class="full row-gap"><button class="btn primary" id="saveProductBtn" type="submit">Ürünü Kaydet</button><button class="btn ghost" id="clearProductBtn" type="button">Formu Temizle</button>
+<hr style="margin:20px 0;border-color:#333;"/>
+<div class="excel-panel">
+<div class="excel-panel-head">
+<strong>Marka + kategoriye göre Excel indir / yükle</strong>
+<span class="muted">Barkodlu Excel düzenleme/yükleme içindir. Toplam Stok Excel aynı ürünleri tek satırda birleştirip toplam adedi raporlar.</span>
+</div>
+<div class="excel-filter-grid">
+<div><label>Ürün Markası</label><select id="excelProductBrandFilter"><option value="">Tüm ürün markaları</option></select></div>
+<div><label>Ürün Kategorisi</label><select id="excelCategoryFilter"><option value="">Tüm kategoriler</option></select></div>
+<div><label>Araç Markası</label><select id="excelCarBrandFilter"><option value="">Tüm araç markaları</option></select></div>
+</div>
+<div class="excel-actions">
+<button class="btn ghost" onclick="clearExcelFilters()" type="button">Filtreleri Temizle</button>
+<button class="btn success" onclick="downloadStockExcel()" type="button">📥 Barkodlu Excel İndir</button>
+<button class="btn primary" onclick="downloadGroupedStockExcel()" type="button">📊 Toplam Stok Excel</button>
+<label class="btn secondary file-picker-label" for="stockExcelInput">📤 Excel Yükle</label>
+<input accept=".xlsx,.xls,.csv" class="file-pick-input" id="stockExcelInput" onchange="uploadStockExcel(event)" type="file"/>
+</div>
+<div class="excel-filter-summary" id="excelFilterSummary">Tüm stok listesi seçili.</div>
+</div>
+</div>
+</form>
+</div>
+</section>
+</div>
+<div class="page hidden legacy-page" id="page-sale">
+<section class="sale-grid">
+<div class="card">
+<div class="section-head">
+<div>
+<h2>Hızlı Satış</h2>
+<p class="muted">Ürünü seç, adet ve fiyat gir, satışı tamamla</p>
+</div>
+<button class="btn secondary" onclick="clearSaleCart()">Sepeti Temizle</button>
+</div>
+<div class="sale-dashboard">
+<div class="sale-stat-card"><span>Bugünkü Ciro</span><strong id="todaySaleTotal">₺0,00</strong></div>
+<div class="sale-stat-card"><span>Satılan Adet</span><strong id="todaySaleQty">0</strong></div>
+<div class="sale-stat-card"><span>Nakit</span><strong id="todayCashTotal">₺0,00</strong></div>
+<div class="sale-stat-card"><span>Kart</span><strong id="todayCardTotal">₺0,00</strong></div>
+</div>
+<div class="quick-favorites" id="saleFavoriteButtons">
+<button onclick="setSaleFavoriteSearch('paspas')" type="button">Paspas</button>
+<button onclick="setSaleFavoriteSearch('havuz')" type="button">Bagaj Havuzu</button>
+<button onclick="setSaleFavoriteSearch('cam rüzgarlığı')" type="button">Cam Rüzgarlığı</button>
+<button onclick="setSaleFavoriteSearch('led')" type="button">LED</button>
+<button onclick="setSaleFavoriteSearch('xenon')" type="button">Xenon</button>
+<button onclick="setSaleFavoriteSearch('sensör')" type="button">Sensör</button>
+</div>
+<div class="row-gap favorite-edit-row">
+<button class="btn secondary" onclick="openSaleFavoritesEditor()" type="button">⚙️ Favorileri Düzenle</button>
+</div>
+<div class="form-grid">
+<div class="full">
+<label>Ürün / Barkod Ara</label>
+<input autocomplete="off" id="saleSearchInput" placeholder="Barkod okut veya paspas, Megane, Rizline yaz..." type="text"/>
+<p class="muted sale-hint">Barkod birebir eşleşirse ürün otomatik sepete eklenir.</p>
+</div>
+</div>
+<div class="sale-product-list" id="saleProductList">
+<div class="empty-state">Satışa ürün eklemek için arama yap</div>
+</div>
+<div class="top-sales-box">
+<div class="section-head compact"><h2>Bugünün En Çok Satanları</h2></div>
+<div class="top-sale-list" id="topSaleProducts"><div class="empty-state">Henüz hızlı satış yok</div></div>
+</div>
+</div>
+<div class="card sale-cart-card">
+<div class="section-head">
+<div>
+<h2>Satış Sepeti</h2>
+<p class="muted">Fiyat müşteriye göre elle girilir</p>
+</div>
+</div>
+<div class="staff-panel">
+<div>
+<label>Aktif Personel</label>
+<select id="currentStaffSelect"></select>
+</div>
+<div>
+<label>Yetki</label>
+<div class="staff-role-badge" id="staffRoleBadge">-</div>
+</div>
+<button class="btn secondary" onclick="openStaffEditor()" type="button">⚙️ Personel Yönetimi</button>
+</div>
+<div class="sale-cart-list" id="saleCartList">
+<div class="empty-state">Sepet boş</div>
+</div>
+<div class="sale-summary">
+<div>Toplam</div>
+<strong id="saleTotal">₺0,00</strong>
+</div>
+<div class="sale-discount-box">
+<label>İndirim Tutarı</label>
+<input id="saleDiscount" min="0" oninput="updateSaleTotal()" placeholder="0" step="1" type="number" value="0"/>
+</div>
+<div class="sale-final-total">
+<span>Genel Toplam</span>
+<strong id="saleFinalTotal">₺0,00</strong>
+</div>
+<div class="form-grid">
+<div>
+<label>Ödeme Tipi</label>
+<select id="salePaymentType">
+<option value="Nakit">Nakit</option>
+<option value="Kart">Kart</option>
+<option value="Kısmi Ödeme">Kısmi Ödeme</option>
+<option value="Ödeme Yok">Ödeme Yok</option>
+</select>
+</div>
+<div>
+<label>Müşteri Ad Soyad</label>
+<input id="saleCustomerName" placeholder="Örn: Ahmet Yılmaz" type="text"/>
+</div>
+<div>
+<label>Müşteri Telefon</label>
+<input id="saleCustomerPhone" placeholder="05xx xxx xx xx" type="tel"/>
+</div>
+<div class="full">
+<label>Satış Notu</label>
+<input id="saleCustomerNote" placeholder="İsteğe bağlı" type="text"/>
+</div>
+</div>
+<div class="row-gap sale-actions">
+<button class="btn success" id="completeSaleBtn" type="button">Satışı Tamamla</button>
+<button class="btn secondary" disabled="" id="printLastSaleBtn" type="button">Son Fişi Yazdır</button>
+<button class="btn danger" disabled="" id="cancelLastSaleBtn" type="button">Son Satışı İptal Et</button>
+<button class="btn ghost" id="clearSaleBtn" type="button">Temizle</button>
+</div>
+</div>
+</section>
+</div>
+<div class="page hidden" id="page-movements">
+<section class="card"><div class="section-head"><div><h2>Son Hareketler</h2><p class="muted">Giriş / çıkış / rezerv geçmişi</p></div></div><div class="movement-list" id="movementList"><div class="empty-state">Henüz hareket yok</div></div></section>
+</div>
+<div class="page hidden legacy-page" id="page-reports">
+<section class="card">
+<div class="section-head">
+<div><h2>Gelişmiş Satış Raporları</h2><p class="muted">Tarih aralığına göre ciro, ödeme, personel ve ürün raporu</p></div>
+<button class="btn success" onclick="exportReportCsv()">Excel / CSV Dışa Aktar</button>
+</div>
+<div class="report-filter-grid">
+<div><label>Başlangıç</label><input id="reportStartDate" type="date"/></div>
+<div><label>Bitiş</label><input id="reportEndDate" type="date"/></div>
+<div><label>Arama</label><input id="reportSearchInput" placeholder="personel, ürün, ödeme tipi..." type="text"/></div>
+<div class="row-gap report-actions"><button class="btn primary" onclick="renderReports()">Raporu Yenile</button></div>
+</div>
+<div class="sale-dashboard report-dashboard">
+<div class="sale-stat-card"><span>Toplam Ciro</span><strong id="reportTotalSales">₺0,00</strong></div>
+<div class="sale-stat-card"><span>Satılan Adet</span><strong id="reportTotalQty">0</strong></div>
+<div class="sale-stat-card"><span>İade Tutarı</span><strong id="reportRefundTotal">₺0,00</strong></div>
+<div class="sale-stat-card"><span>Net Hareket</span><strong id="reportMoveCount">0</strong></div>
+</div>
+<section class="mega-grid-3">
+<div class="card inner-card"><h2>Ürün Bazlı</h2><div class="top-sale-list" id="reportProductList"><div class="empty-state">Rapor bekleniyor</div></div></div>
+<div class="card inner-card"><h2>Personel Bazlı</h2><div class="top-sale-list" id="reportStaffList"><div class="empty-state">Rapor bekleniyor</div></div></div>
+<div class="card inner-card"><h2>Ödeme Tipi</h2><div class="top-sale-list" id="reportPaymentList"><div class="empty-state">Rapor bekleniyor</div></div></div>
+</section>
+</section>
+</div>
+<div class="page hidden" id="page-critical">
+<section class="card">
+<div class="section-head">
+<div><h2>Kritik Stok Merkezi</h2><p class="muted">Minimum stok seviyesine yaklaşan veya altına düşen ürünler</p></div>
+<button class="btn secondary" onclick="renderCriticalStock()">Yenile</button>
+</div>
+<div class="stock-filter-row order-filter-row">
+<select id="criticalCategoryFilter" class="search-input stock-category-select" onchange="setCriticalCategoryFilter(this.value)"><option value="all">Tüm Kategoriler</option></select>
+<select id="criticalProductBrandFilter" class="search-input stock-category-select" onchange="setCriticalProductBrandFilter(this.value)"><option value="all">Tüm Ürün Markaları</option></select>
+<select id="criticalCarBrandFilter" class="search-input stock-category-select" onchange="setCriticalCarBrandFilter(this.value)"><option value="all">Tüm Araç Markaları</option></select>
+</div>
+<input class="search-input" id="criticalSearchInput" placeholder="Kritik ürünlerde ara..." type="text"/>
+<div class="sale-product-list" id="criticalStockList"><div class="empty-state">Kritik stok bekleniyor</div></div>
+</section>
+</div>
+
+<div class="page hidden legacy-page" id="page-history">
+<section class="card">
+<div class="section-head">
+<div><h2>Müşteri / Plaka Geçmişi</h2><p class="muted">Plaka veya müşteri adı ile depo talepleri ve stok hareketlerini bul</p></div>
+</div>
+<div class="form-grid">
+<div class="full"><label>Plaka / Müşteri / Kayıt No</label><input id="historySearchInput" placeholder="07ABC123 veya müşteri adı..." type="text"/></div>
+<div class="full row-gap"><button class="btn primary" onclick="renderPlateHistory()">Geçmişi Getir</button></div>
+</div>
+<div class="sale-dashboard report-dashboard">
+<div class="sale-stat-card"><span>Talep Sayısı</span><strong id="historyRequestCount">0</strong></div>
+<div class="sale-stat-card"><span>Hareket Sayısı</span><strong id="historyMovementCount">0</strong></div>
+<div class="sale-stat-card"><span>Satış / Çıkış</span><strong id="historySaleCount">0</strong></div>
+<div class="sale-stat-card"><span>Son İşlem</span><strong id="historyLastDate">-</strong></div>
+</div>
+<section class="grid-2">
+<div class="card inner-card"><h2>Depo Talepleri</h2><div class="movement-list" id="historyRequestList"><div class="empty-state">Arama bekleniyor</div></div></div>
+<div class="card inner-card"><h2>Stok Hareketleri</h2><div class="movement-list" id="historyMovementList"><div class="empty-state">Arama bekleniyor</div></div></div>
+</section>
+</section>
+</div>
+</div>
+<div class="modal-backdrop hidden" id="saleFavoriteEditor">
+<div class="modal-card">
+<div class="section-head compact">
+<h2>Favori Satış Butonları</h2>
+<button class="btn ghost" onclick="closeSaleFavoritesEditor()" type="button">Kapat</button>
+</div>
+<p class="muted">Her satıra bir buton adı yaz. Örn: Paspas, LED, Bagaj Havuzu</p>
+<textarea id="saleFavoriteTextarea" placeholder="Paspas
+Bagaj Havuzu
+LED" rows="8"></textarea>
+<div class="row-gap" style="margin-top:12px">
+<button class="btn success" onclick="saveSaleFavoritesFromEditor()" type="button">Kaydet</button>
+<button class="btn secondary" onclick="resetSaleFavorites()" type="button">Varsayılana Dön</button>
+</div>
+</div>
+</div>
+<div class="page hidden" id="page-categoryValues">
+<section class="card">
+<div class="section-head">
+<div>
+<h2>Kategori Değerleri</h2>
+<p class="muted">Ürün kartlarına girilen alış ve ortalama satış fiyatlarına göre stok toplam değerlerini otomatik hesapla.</p>
+</div>
+<button class="btn secondary" onclick="loadCategoryValues()" type="button">Yenile</button>
+</div>
+<div class="category-value-summary" id="categoryValueSummary">
+<div class="empty-state">Hesaplama için veriler bekleniyor...</div>
+</div>
+</section>
+<section class="card category-price-update-card">
+<div class="section-head compact">
+<div>
+<h2>Kategori Bazlı Fiyat Güncelleme</h2>
+<p class="muted">Seçilen kategorideki ürünlerin alış veya ortalama satış fiyatını yüzde ya da sabit TL tutarıyla topluca artır.</p>
+</div>
+</div>
+<div class="form-grid category-price-update-grid">
+<div><label>Kategori *</label><select id="bulkPriceCategory"><option value="">Kategori seç</option></select></div>
+<div><label>Güncellenecek Fiyat *</label><select id="bulkPriceField"><option value="average_sale_price">Ortalama Satış Fiyatı</option><option value="purchase_price">Alış Fiyatı</option><option value="both">Alış + Satış Fiyatı</option></select></div>
+<div><label>Artış Türü *</label><select id="bulkPriceMode"><option value="percent">Yüzde (%)</option><option value="fixed">Sabit Tutar (₺)</option></select></div>
+<div><label>Artış Miktarı *</label><input id="bulkPriceAmount" min="0" step="0.01" type="number" placeholder="Örn: 10 veya 500"/></div>
+<div class="full category-price-update-actions">
+<button class="btn success" onclick="applyCategoryPriceUpdate()" type="button">Fiyatları Güncelle</button>
+<span class="muted" id="bulkPricePreview">Kategori ve tutar seçildiğinde işlem özeti burada görünür.</span>
+</div>
+</div>
+</section>
+<section class="card">
+<h2>Ürün Bazlı Fiyat Sistemi</h2>
+<p class="muted">Fiyatlar artık her ürün kartındaki <b>Alış Fiyatı</b> ve <b>Ortalama Satış Fiyatı</b> alanlarından alınır.</p>
+</section>
+<section class="card">
+<h2>Kategori Bazlı Toplamlar</h2>
+<div id="categoryValueDetail"><div class="empty-state">Veri bekleniyor...</div></div>
+</section>
+</div>
+<div class="page hidden" id="page-orderSuggestion">
+<section class="card">
+<div class="section-head">
+<div>
+<h2>Sipariş Önerisi</h2>
+<p class="muted">Son 7 günlük stok çıkışlarına göre haftalık toplu sipariş listesi oluşturur.</p>
+</div>
+<div class="row-gap">
+<button class="btn secondary" onclick="loadOrderSuggestions()" type="button">Yenile</button>
+<button class="btn success" onclick="downloadOrderSuggestionExcel()" type="button">Excel İndir</button>
+</div>
+</div>
+<div class="stock-filter-row order-filter-row">
+          <select id="orderSuggestionCategoryFilter" class="search-input stock-category-select" onchange="setOrderSuggestionCategoryFilter(this.value)"><option value="all">Tüm Kategoriler</option></select>
+<select id="orderSuggestionProductBrandFilter" class="search-input stock-category-select" onchange="setOrderSuggestionProductBrandFilter(this.value)"><option value="all">Tüm Ürün Markaları</option></select>
+<select id="orderSuggestionCarBrandFilter" class="search-input stock-category-select" onchange="setOrderSuggestionCarBrandFilter(this.value)"><option value="all">Tüm Araç Markaları</option></select>
+        </div>
+<div class="order-hint">
+          Hesap: <strong>Önerilen Sipariş = Son 7 Gün Çıkış - Mevcut Stok</strong>. Sonuç eksi çıkarsa 0 gösterilir.
+        </div>
+<div class="category-value-summary" id="orderSuggestionSummary">
+<div class="empty-state">Hesaplama için veriler bekleniyor...</div>
+</div>
+</section>
+<section class="card">
+<h2>Haftalık Sipariş Listesi</h2>
+<div id="orderSuggestionList"><div class="empty-state">Veri bekleniyor...</div></div>
+</section>
+</div>
+<div class="page hidden" id="page-surveys">
+<section class="card">
+<div class="section-head compact">
+<div>
+<h2>Müşteri Memnuniyeti</h2>
+<p class="muted">QR anketlerinden gelen değerlendirmeler ve son yorumlar</p>
+</div>
+<div class="row-gap">
+<a class="btn secondary" href="https://anket-five.vercel.app" rel="noopener" target="_blank">
+  Anket Sayfasını Aç
+</a>
+<button class="btn secondary" onclick="loadCustomerSurveyStats()" type="button">Yenile</button>
+</div>
+</div>
+<div class="survey-admin-note">
+          QR linki: <strong>https://anket-five.vercel.app</strong> — Müşteriler bu sayfadan anonim değerlendirme gönderebilir.
+        </div>
+<div id="customerSurveyPanel">
+<div class="empty-state">Anket verileri yükleniyor...</div>
+</div>
+</section>
+</div>
+<style>
+      #page-surveys .survey-admin-note{background:#172033;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:14px;color:#dbeafe}
+      #page-surveys .survey-admin-note strong{color:#93c5fd}
+      #page-surveys .survey-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0}
+      #page-surveys .survey-stats .stat-card{padding:16px;border-radius:14px;border:1px solid #334155;background:#111827;color:#f8fafc;box-shadow:none}
+      #page-surveys .survey-stats .stat-card:nth-child(1){border-color:#38bdf8;background:#0f2537}
+      #page-surveys .survey-stats .stat-card:nth-child(2){border-color:#22c55e;background:#10291a}
+      #page-surveys .survey-stats .stat-card:nth-child(3){border-color:#f97316;background:#301c0d}
+      #page-surveys .survey-stats .stat-card:nth-child(4){border-color:#a78bfa;background:#221735}
+      #page-surveys .survey-stats .stat-card b{display:block;font-size:30px;color:#ffffff;line-height:1.1;margin-bottom:10px}
+      #page-surveys .survey-stats .stat-card:nth-child(1) b{color:#7dd3fc}
+      #page-surveys .survey-stats .stat-card:nth-child(2) b{color:#86efac}
+      #page-surveys .survey-stats .stat-card:nth-child(3) b{color:#fdba74}
+      #page-surveys .survey-stats .stat-card:nth-child(4) b{color:#c4b5fd}
+      #page-surveys .survey-stats .stat-card span{color:#e5e7eb;font-size:13px}
+      #page-surveys .survey-table{width:100%;border-collapse:separate;border-spacing:0;margin:10px 0 20px;background:#111827;border:1px solid #334155;border-radius:12px;overflow:hidden;color:#f8fafc}
+      #page-surveys .survey-table th{background:#1f2937;color:#93c5fd;font-weight:800}
+      #page-surveys .survey-table th,#page-surveys .survey-table td{border-bottom:1px solid #334155;padding:11px;text-align:left;color:#f8fafc}
+      #page-surveys .survey-table tr:last-child td{border-bottom:none}
+      #page-surveys .survey-table td:last-child{font-weight:800;color:#86efac}
+      #page-surveys .survey-comment{border:1px solid #334155;border-radius:12px;padding:12px;margin:10px 0;background:#111827;color:#f8fafc}
+      #page-surveys .survey-comment.danger{border-color:#ef4444;background:#2a1111}
+      #page-surveys .survey-comment strong{color:#93c5fd}
+      #page-surveys .survey-comment p{margin:8px 0 0;white-space:pre-wrap;color:#f8fafc}
+      #page-surveys .survey-comment small{display:block;color:#cbd5e1;margin-top:6px}
+    
+.purchase-order-grid{align-items:start}.purchase-order-head-fields{margin:14px 0}.purchase-order-head-fields .full{grid-column:1/-1}.purchase-order-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border,#dfe5ec)}.purchase-draft-item,.purchase-order-card{border:1px solid var(--border,#dfe5ec);border-radius:14px;padding:12px;background:var(--card,#fff)}.purchase-draft-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.purchase-draft-item input{width:84px}.purchase-order-card .order-items{margin-top:10px;display:grid;gap:7px}.purchase-order-card .order-line{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;border-radius:9px;background:rgba(127,127,127,.08)}.purchase-order-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.nav-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;margin-left:4px}.nav-count.hidden{display:none}@media(max-width:720px){.purchase-draft-item{grid-template-columns:1fr auto}.purchase-draft-item .remove-order-item{grid-column:1/-1}.purchase-order-footer{align-items:stretch;flex-direction:column}}
+</style>
+<div class="page hidden" id="page-management">
+<section class="card management-card">
+<div class="section-head">
+<div>
+<h2>Yönetim</h2>
+<p class="muted">Toplu işlemler, kategori/marka sayımı ve ileride eklenecek yönetim araçları</p>
+</div>
+<button class="btn secondary" onclick="loadDeleteMarkedCount()" type="button">Sayıyı Yenile</button>
+</div>
+<div class="management-tool-card">
+<div class="management-tool-icon">📊</div>
+<div class="management-tool-content">
+<h3>Kategori / Ürün Markası Listesi</h3>
+<p class="muted">Hangi kategoride hangi ürün markasından kaç ürün kartı ve kaç stok adedi var gösterir.</p>
+<div class="category-value-summary" id="managementCategoryBrandSummary">
+<div class="empty-state">Liste hazırlanıyor...</div>
+</div>
+<div id="managementCategoryBrandList">
+<div class="empty-state">Liste için Yönetim sekmesini yenile.</div>
+</div>
+</div>
+</div>
+<div class="management-tool-card danger-zone">
+<div class="management-tool-icon">🧹</div>
+<div class="management-tool-content">
+<h3>Toplu Ürün Temizleme</h3>
+<p class="muted">Excel'de <b>Araç Markası</b> alanına <b>SİLİNECEK</b> yazıp yüklediğin ürünleri tek tuşla kalıcı siler.</p>
+<div class="delete-marked-counter">
+<span>SİLİNECEK ürün</span>
+<strong id="deleteMarkedCount">0</strong>
+</div>
+<div class="muted management-info" id="deleteMarkedInfo">Sayı kontrol edilmedi.</div>
+<div class="row-gap management-actions">
+<button class="btn secondary" onclick="loadDeleteMarkedCount()" type="button">Tekrar Kontrol Et</button>
+<button class="btn danger" disabled="" id="deleteMarkedProductsBtn" onclick="deleteMarkedProducts()" type="button">Kalıcı Olarak Sil</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="page hidden" id="page-settings">
+<section class="card settings-card">
+<div class="section-head"><div><h2>Ayarlar</h2><p class="muted">Program görünümünü kişiselleştir. Bu sekme Admin tarafından personele özel açılabilir.</p></div></div>
+<div class="management-tool-card account-management-card">
+<div class="management-tool-icon">🔐</div>
+<div class="management-tool-content">
+<h3>Hesabım ve Şifre</h3>
+<p class="muted">Mevcut şifreni doğrulayarak Supabase Auth hesabındaki giriş şifreni değiştirebilirsin.</p>
+<div class="form-grid password-change-grid">
+<div><label for="currentPasswordInput">Mevcut şifre</label><input id="currentPasswordInput" type="password" autocomplete="current-password" inputmode="text" /></div>
+<div><label for="newPasswordInput">Yeni şifre</label><input id="newPasswordInput" type="password" autocomplete="new-password" minlength="6" /></div>
+<div><label for="repeatPasswordInput">Yeni şifre tekrar</label><input id="repeatPasswordInput" type="password" autocomplete="new-password" minlength="6" /></div>
+<div class="password-change-action"><button class="btn success" id="changePasswordBtn" onclick="changeOwnPassword()" type="button">Şifreyi Güncelle</button></div>
+</div>
+<small class="muted">Şifre değişince güvenlik için oturum kapatılır ve yeni şifreyle tekrar giriş yapılır.</small>
+</div>
+</div>
+<div class="management-tool-card theme-management-card">
+<div class="management-tool-icon">🎨</div>
+<div class="management-tool-content">
+<h3>Program Teması</h3>
+<p class="muted">Tema değişince kart, kutu ve yazı renkleri birlikte uyarlanır. Açık zeminde koyu, koyu zeminde açık yazı kullanılır.</p>
+<div class="theme-picker" id="themePicker">
+<button class="theme-option" data-theme-value="garage-dark" onclick="setStockTheme('garage-dark')" type="button"><span class="theme-preview garage-dark-preview"><i></i><b></b><em></em></span><strong>Garage Dark</strong><small>Koyu lacivert</small></button>
+<button class="theme-option" data-theme-value="garage-exclusive" onclick="setStockTheme('garage-exclusive')" type="button"><span class="theme-preview garage-exclusive-preview"><i></i><b></b><em></em></span><strong>Garage Exclusive</strong><small>Siyah & kırmızı</small></button>
+<button class="theme-option" data-theme-value="midnight-blue" onclick="setStockTheme('midnight-blue')" type="button"><span class="theme-preview midnight-preview"><i></i><b></b><em></em></span><strong>Midnight Blue</strong><small>Lacivert & mavi</small></button>
+<button class="theme-option" data-theme-value="emerald" onclick="setStockTheme('emerald')" type="button"><span class="theme-preview emerald-preview"><i></i><b></b><em></em></span><strong>Emerald</strong><small>Koyu yeşil</small></button>
+<button class="theme-option" data-theme-value="carbon-orange" onclick="setStockTheme('carbon-orange')" type="button"><span class="theme-preview carbon-preview"><i></i><b></b><em></em></span><strong>Carbon Orange</strong><small>Karbon & turuncu</small></button>
+<button class="theme-option" data-theme-value="light" onclick="setStockTheme('light')" type="button"><span class="theme-preview light-preview"><i></i><b></b><em></em></span><strong>Light</strong><small>Açık tema</small></button>
+</div>
+<div class="theme-current-text" id="themeCurrentText">Seçili tema: Garage Dark</div>
+</div>
+</div>
+
+</section>
+</div>
+<div class="page hidden" id="page-users">
+<section class="grid-2 users-permission-grid">
+<div class="card">
+<div class="section-head">
+<div>
+<h2>Kullanıcı / Yetki Merkezi</h2>
+<p class="muted">Personeller, roller, son giriş ve yetki ayarları</p>
+</div>
+<button class="btn secondary" onclick="openStaffEditor()" type="button">⚙️ Personel Yönetimi</button>
+</div>
+<div class="users-list" id="usersList"><div class="empty-state">Personeller yükleniyor...</div></div>
+</div>
+<div class="card">
+<div class="section-head">
+<div>
+<h2>Menü Yetkileri</h2>
+<p class="muted">Hangi rolün hangi sekmeleri göreceğini buradan ayarla. Admin her zaman tüm sekmeleri görür.</p>
+</div>
+</div>
+<div class="permission-editor" id="rolePermissionEditor">
+<div class="empty-state">Menü yetkileri yükleniyor...</div>
+</div>
+<div class="row-gap permission-actions">
+<button class="btn success" onclick="saveRolePermissions()" type="button">Yetkileri Kaydet</button>
+<button class="btn secondary" onclick="resetRolePermissions()" type="button">Varsayılana Dön</button>
+</div>
+</div>
+<div class="card full-span user-category-permissions-card">
+<div class="section-head"><div><h2>Kategori ve İşlem Yetkileri</h2><p class="muted">Her personelin görebileceği ürün kategorilerini ve yapabileceği işlemleri ayrı ayrı belirle.</p></div></div>
+<div id="userCategoryPermissionEditor"><div class="empty-state">Kategori yetkileri yükleniyor...</div></div>
+<div class="row-gap permission-actions"><button class="btn success" type="button" onclick="saveUserCategoryPermissions()">Kategori Yetkilerini Kaydet</button></div>
+</div>
+</section>
+</div>
+<div class="page hidden" id="page-logs">
+<section class="card">
+<div class="section-head compact">
+<div>
+<h2>Son İşlem Kayıtları</h2>
+<p class="muted">Silme, giriş, çıkış ve yetki değişiklikleri burada tutulur.</p>
+</div>
+<button class="btn secondary" onclick="loadActivityLogs()" type="button">Yenile</button>
+</div>
+<div class="movement-list" id="activityLogList"><div class="empty-state">Kayıt bekleniyor...</div></div>
+</section>
+</div>
+<div class="modal-backdrop hidden" id="staffEditor">
+<div class="modal-card wide">
+<div class="section-head compact">
+<h2>Personel Yönetimi</h2>
+<button class="btn ghost" onclick="closeStaffEditor()" type="button">Kapat</button>
+</div>
+<p class="muted">Personel adı, rolü ve şifresini buradan düzenle. Bu alana giriş için Admin şifresi gerekir.</p>
+<div id="staffEditorBody"></div>
+<div class="staff-editor-message hidden" id="staffEditorMessage" role="status" aria-live="polite"></div>
+<div class="row-gap" style="margin-top:12px">
+<button class="btn secondary" onclick="addStaffEditorRow()" type="button">+ Personel Ekle</button>
+<button class="btn success" id="saveStaffEditorBtn" onclick="saveStaffEditor()" type="button">Kaydet</button>
+<button class="btn danger" onclick="resetStaffEditor()" type="button">Varsayılana Dön</button>
+</div>
+</div>
+</div>
+
+
+<div class="modal-backdrop hidden" id="purchaseGroupModal">
+  <div class="modal-card wide purchase-group-modal-card">
+    <div class="section-head compact">
+      <div><h2>📦 Sipariş Oluştur</h2><p class="muted">Bu siparişe eklenecek ürünleri seç.</p></div>
+      <button class="btn ghost" type="button" onclick="closePurchaseOrderGroupModal()">Kapat</button>
+    </div>
+    <div class="form-grid purchase-order-head-fields">
+      <div><label>Tedarikçi</label><input id="purchaseGroupSupplier" placeholder="Örn: Rizline" type="text"/></div>
+      <div><label>Tahmini Geliş</label><input id="purchaseGroupExpectedDate" type="date"/></div>
+      <div class="full"><label>Not</label><input id="purchaseGroupNote" placeholder="Sipariş notu" type="text"/></div>
+    </div>
+    <div class="purchase-group-tools">
+      <button class="btn secondary mini" type="button" onclick="selectSameSupplierPurchaseItems()">Aynı Tedarikçileri Seç</button>
+      <button class="btn ghost mini" type="button" onclick="selectAllPurchaseItems(false)">Seçimi Temizle</button>
+      <button class="btn ghost mini" type="button" onclick="selectAllPurchaseItems(true)">Tümünü Seç</button>
+    </div>
+    <div id="purchaseGroupItemList" class="purchase-group-list"></div>
+    <div class="purchase-order-footer">
+      <strong>Seçilen: <span id="purchaseGroupSelectedCount">0</span> kalem</strong>
+      <button class="btn success" type="button" onclick="createGroupedPurchaseOrder()">Seçilenlerle Sipariş Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<div class="camera-capture-modal hidden" id="productCameraModal" aria-modal="true" role="dialog" aria-label="Ürün fotoğrafı çek">
+  <div class="camera-capture-backdrop" onclick="closeProductCamera()"></div>
+  <div class="camera-capture-card">
+    <div class="section-head compact">
+      <div>
+        <h2>📸 Ürün Fotoğrafı Çek</h2>
+        <p class="muted" id="productCameraMessage">Kamera hazırlanıyor...</p>
+      </div>
+      <button class="btn ghost" onclick="closeProductCamera()" type="button">Kapat</button>
+    </div>
+    <video id="productCameraVideo" autoplay playsinline muted></video>
+    <canvas id="productCameraCanvas" class="hidden"></canvas>
+    <div class="row-gap camera-capture-actions">
+      <button class="btn secondary" onclick="switchProductCamera()" id="productCameraSwitchBtn" type="button">🔄 Kamerayı Çevir</button>
+      <button class="btn success" onclick="captureProductCameraPhoto()" id="productCameraCaptureBtn" type="button">📷 Fotoğrafı Çek</button>
+    </div>
+  </div>
+</div>
+<div class="toast hidden" id="toast"></div>
+<div aria-modal="true" class="app-confirm-overlay hidden" id="appConfirmOverlay" role="dialog">
+<div class="app-confirm-card">
+<h3 id="appConfirmTitle">Onay gerekiyor</h3>
+<p id="appConfirmMessage"></p>
+<div class="app-confirm-actions">
+<button class="btn secondary" id="appConfirmCancel" type="button">İptal</button>
+<button class="btn primary" id="appConfirmOk" type="button">Onayla</button>
+</div>
+</div>
+</div>
+<datalist id="productBrandList"></datalist>
+<datalist id="categoryList"></datalist>
+<datalist id="carBrandList"></datalist>
+<datalist id="carModelList"></datalist>
+<datalist id="carTypeList"></datalist>
+<datalist id="vehicleYearList"></datalist>
+<datalist id="locationList"></datalist>
+<script src="js/core.js"></script>
+<script src="js/inventory.js"></script>
+<script src="js/sales-dashboard.js"></script>
+<script src="js/staff.js"></script>
+<script src="js/sales.js"></script>
+<script src="js/requests.js"></script>
+<script src="js/surveys.js"></script>
+<script src="js/management.js"></script>
+<script src="js/purchasing.js"></script>
+<script src="js/navigation.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/migration-api.js"></script>
+<script src="js/events.js"></script>
+<script src="js/excel.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

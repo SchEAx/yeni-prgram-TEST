@@ -1,0 +1,19 @@
+Garage İstanbul Stok v3.11.0 - Modüler yapı
+
+js/core.js             : config, state, DOM, yetki, ortak yardımcılar
+js/inventory.js        : stok, ürün, arama, giriş/çıkış
+js/sales-dashboard.js  : satış hesapları/dashboard
+js/staff.js            : personel ve roller
+js/sales.js            : hızlı satış/sepet/fiş/iade
+js/requests.js         : rezervasyon/talep ürün arama
+js/surveys.js          : müşteri memnuniyeti
+js/management.js       : fiyat/kategori/sipariş önerisi/yönetim
+js/purchasing.js       : satın alma/verilen siparişler
+js/navigation.js       : sekmeler, update, realtime
+js/reports.js          : rapor/kritik stok/plaka geçmişi
+js/events.js           : event listener, boot, heartbeat
+js/excel.js            : Excel indirme/yükleme + Toplam Stok Excel
+app.js                 : runtime, tema, global hata yakalama
+
+Yeni: Ürün Ekle ekranındaki Excel bölümünde “Toplam Stok Excel” butonu.
+Aynı ürün kartlarını tek satırda birleştirir; stok, rezerve, kullanılabilir stok, barkodlar ve rafları toplu gösterir.

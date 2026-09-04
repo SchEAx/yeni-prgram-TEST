@@ -1,0 +1,29 @@
+Garage İstanbul Stok - Migration Test Frontend
+
+API: https://api.scheax.com.tr/migration-test
+Auth: PostgreSQL app_users + JWT
+Açık ekranlar: İşlem, Hareketler, Kritik Stok
+Açık yazma: Manuel stok giriş / çıkış
+
+Güvenlik kilitleri:
+- Supabase SDK paketten çıkarıldı.
+- Eski Supabase client yerine ağ çağrısı yapmayan kilitli stub var.
+- Eski Vercel /api serverless klasörü çıkarıldı.
+- Ürün ekle/düzenle/sil, barkod, sipariş, kullanıcı/yetki, ayarlar vb. ekranlar canAccessTab ile kapalı ve CSS ile gizli.
+- Supabase Storage görselleri migration testte yüklenmiyor.
+
+Deploy:
+- SADECE ayrı bir Vercel test projesine deploy edin. Canlı projeye yüklemeyin.
+- İlk giriş: scheax kullanıcı adı ve mevcut şifresi.
+- Beklenen dashboard: 3232 ürün, yaklaşık 11983 toplam stok.
+- Kontrollü test: 1 giriş + 1 çıkış, ardından Hareketler ekranında doğrula.
+
+JWT-2: Başarılı stok giriş/çıkışından sonra ürün detayı API'den yeniden okunur; işlem kartı, grup toplamı, hareketler ve dashboard sayıları sayfa yenilemeden güncellenir.
+
+JWT-3: Kritik Stok PostgreSQL /api/stock/critical üzerinden açıldı. 715 kritik kayıt, kategori/ürün markası/araç markası ve akıllı arama filtreleri desteklenir; düzenleme butonu migration testte kapalıdır.
+
+- Sipariş Önerisi PostgreSQL API üzerinden aktif; Excel indirme korunmuştur.
+
+- v4.2: Sipariş Önerisi menü görünürlüğü düzeltildi; migration güvenlik CSS kilidinden çıkarıldı.
+
+- v5.0: Ürün Ekle/Düzenle güvenli PostgreSQL CRUD API'ye taşındı. Admin silme API güvenlik kontrolleriyle açıldı. Kamera/Galeri görselleri /api/products/:id/image üzerinden sunucudaki migration-test uploads alanına gider. Eski Supabase Storage görselleri testte gösterilmez. Excel yükleme/indirme paneli migration testte kapalı tutulur.
