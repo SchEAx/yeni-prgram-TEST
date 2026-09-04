@@ -166,3 +166,10 @@ v14.3:
 - Body arka planı, header, sidebar/üst menü, kartlar, form alanları ve tablo başlıkları aktif tema değişkenlerinden besleniyor.
 - Garage Exclusive, Midnight Blue, Emerald, Carbon Orange ve Light temalarında ana sayfa zemini artık tam değişiyor.
 - Asset query, version.json ve Service Worker cache sürümü 15.2'ye yükseltildi.
+
+
+v15.3
+- Müşteri Memnuniyeti: tüm anket kayıtları tablo görünümü eklendi.
+- Admin için tek tek anket silme butonu eklendi (DELETE API gerekir).
+- Kullanıcının yeni Garage İstanbul logosu logo.png ve PWA ikonlarına uygulandı.
+- favicon/apple-touch/PWA ikonları aynı logodan üretildi.

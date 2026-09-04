@@ -17,11 +17,12 @@
 })();
 </script>
 <link href="./icons/apple-touch-icon.png" rel="apple-touch-icon"/>
+<link href="./icons/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/>
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="Garage Stok" name="apple-mobile-web-app-title"/>
-<link href="manifest.webmanifest?v=15.2" rel="manifest"/>
-<link href="style.css?v=15.2" rel="stylesheet"/>
+<link href="manifest.webmanifest?v=15.3" rel="manifest"/>
+<link href="style.css?v=15.3" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -699,6 +700,25 @@ LED" rows="8"></textarea>
       #page-surveys .survey-comment strong{color:#93c5fd}
       #page-surveys .survey-comment p{margin:8px 0 0;white-space:pre-wrap;color:#f8fafc}
       #page-surveys .survey-comment small{display:block;color:#cbd5e1;margin-top:6px}
+      /* v15.3 - Anket kayıt tablosu / tema uyumu */
+      #page-surveys .survey-table-scroll{width:100%;overflow:auto;border-radius:14px;border:1px solid var(--border);margin:10px 0 20px;background:color-mix(in srgb,var(--panel) 92%,transparent)}
+      #page-surveys .survey-table{margin:0;border:0;border-radius:0;background:var(--panel);color:var(--text)}
+      #page-surveys .survey-table th{position:sticky;top:0;z-index:1;background:color-mix(in srgb,var(--panel) 82%,#000 18%);color:var(--text);white-space:nowrap}
+      #page-surveys .survey-table th,#page-surveys .survey-table td{border-color:var(--border);color:var(--text);vertical-align:top}
+      #page-surveys .survey-average-table{min-width:520px}
+      #page-surveys .survey-record-table{min-width:1480px}
+      #page-surveys .survey-record-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-top:18px}
+      #page-surveys .survey-record-head h3{margin-bottom:4px}
+      #page-surveys .survey-table-comment{min-width:260px;max-width:420px;white-space:normal;line-height:1.4}
+      #page-surveys .survey-row-low td{background:color-mix(in srgb,var(--danger) 10%,transparent)}
+      #page-surveys .survey-delete-btn{padding:8px 12px;white-space:nowrap}
+      #page-surveys .survey-comment{background:var(--panel);color:var(--text);border-color:var(--border)}
+      #page-surveys .survey-comment p{color:var(--text)}
+      #page-surveys .survey-comment small{color:var(--muted)}
+      #page-surveys .survey-admin-note{background:color-mix(in srgb,var(--panel) 88%,var(--primary) 12%);border-color:var(--border);color:var(--text)}
+      #page-surveys .survey-admin-note strong{color:var(--text)}
+      @media(max-width:700px){#page-surveys .survey-record-head{align-items:stretch;flex-direction:column}#page-surveys .survey-record-head .btn{width:100%}}
+
     
 .purchase-order-grid{align-items:start}.purchase-order-head-fields{margin:14px 0}.purchase-order-head-fields .full{grid-column:1/-1}.purchase-order-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border,#dfe5ec)}.purchase-draft-item,.purchase-order-card{border:1px solid var(--border,#dfe5ec);border-radius:14px;padding:12px;background:var(--card,#fff)}.purchase-draft-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.purchase-draft-item input{width:84px}.purchase-order-card .order-items{margin-top:10px;display:grid;gap:7px}.purchase-order-card .order-line{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;border-radius:9px;background:rgba(127,127,127,.08)}.purchase-order-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.nav-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;margin-left:4px}.nav-count.hidden{display:none}@media(max-width:720px){.purchase-draft-item{grid-template-columns:1fr auto}.purchase-draft-item .remove-order-item{grid-column:1/-1}.purchase-order-footer{align-items:stretch;flex-direction:column}}
 </style>
@@ -809,21 +829,21 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=15.2"></script>
-<script src="js/inventory.js?v=15.2"></script>
-<script src="js/sales-dashboard.js?v=15.2"></script>
-<script src="js/staff.js?v=15.2"></script>
-<script src="js/sales.js?v=15.2"></script>
-<script src="js/requests.js?v=15.2"></script>
-<script src="js/surveys.js?v=15.2"></script>
-<script src="js/management.js?v=15.2"></script>
-<script src="js/purchasing.js?v=15.2"></script>
-<script src="js/navigation.js?v=15.2"></script>
-<script src="js/reports.js?v=15.2"></script>
-<script src="js/migration-api.js?v=15.2"></script>
-<script src="js/events.js?v=15.2"></script>
-<script src="js/excel.js?v=15.2"></script>
-<script src="js/migration-excel.js?v=15.2"></script>
-<script src="app.js?v=15.2"></script>
+<script src="js/core.js?v=15.3"></script>
+<script src="js/inventory.js?v=15.3"></script>
+<script src="js/sales-dashboard.js?v=15.3"></script>
+<script src="js/staff.js?v=15.3"></script>
+<script src="js/sales.js?v=15.3"></script>
+<script src="js/requests.js?v=15.3"></script>
+<script src="js/surveys.js?v=15.3"></script>
+<script src="js/management.js?v=15.3"></script>
+<script src="js/purchasing.js?v=15.3"></script>
+<script src="js/navigation.js?v=15.3"></script>
+<script src="js/reports.js?v=15.3"></script>
+<script src="js/migration-api.js?v=15.3"></script>
+<script src="js/events.js?v=15.3"></script>
+<script src="js/excel.js?v=15.3"></script>
+<script src="js/migration-excel.js?v=15.3"></script>
+<script src="app.js?v=15.3"></script>
 </body>
 </html>
