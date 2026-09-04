@@ -1284,8 +1284,11 @@ tbody tr:hover{
     position:sticky;
     top:10px;
     z-index:90;
-    margin-left:calc((var(--flow-sidebar-w) + 18px) * -1);
-    width:calc(100% + var(--flow-sidebar-w) + 18px);
+    /* Header, sidebar'ın üstüne taşmasın; içerikle aynı hizada başlasın. */
+    margin-left:0;
+    margin-right:0;
+    width:100%;
+    max-width:100%;
     margin-bottom:16px;
   }
 
@@ -1701,97 +1704,5 @@ body{
   .migration-test-mode #nav-categoryValues:not(.hidden){
     justify-content:center!important;
     text-align:center!important;
-  }
-}
-/* =========================================================
-   GARAGEFLOW v14.2
-   HEADER / SIDEBAR ÇAKIŞMA DÜZELTMESİ
-   ========================================================= */
-
-:root {
-  --garage-sidebar-left: 52px;
-  --garage-sidebar-width: 220px;
-  --garage-content-gap: 4px;
-  --garage-page-right: 36px;
-}
-
-/* Masaüstü */
-@media (min-width: 901px) {
-
-  /* Üst GarageFlow · Stok konteynırı */
-  .topbar,
-  .header,
-  .app-header,
-  .page-header,
-  .dashboard-header,
-  header.topbar,
-  header.header {
-    margin-left: calc(
-      var(--garage-sidebar-left) +
-      var(--garage-sidebar-width) +
-      var(--garage-content-gap)
-    ) !important;
-
-    margin-right: var(--garage-page-right) !important;
-
-    width: auto !important;
-    max-width: none !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Sol menü */
-  .sidebar,
-  .side-menu,
-  .app-sidebar,
-  aside.sidebar {
-    width: var(--garage-sidebar-width) !important;
-    box-sizing: border-box !important;
-  }
-
-  /* Ana içerik de sidebar hizasında kalsın */
-  .main-content,
-  .page-content,
-  .content,
-  main.content,
-  main.main-content {
-    margin-left: calc(
-      var(--garage-sidebar-left) +
-      var(--garage-sidebar-width) +
-      var(--garage-content-gap)
-    ) !important;
-
-    margin-right: var(--garage-page-right) !important;
-    width: auto !important;
-    max-width: none !important;
-    box-sizing: border-box !important;
-  }
-}
-
-/* Tablet / Mobil */
-@media (max-width: 900px) {
-
-  .topbar,
-  .header,
-  .app-header,
-  .page-header,
-  .dashboard-header,
-  header.topbar,
-  header.header,
-  .main-content,
-  .page-content,
-  .content,
-  main.content,
-  main.main-content {
-    margin-left: 12px !important;
-    margin-right: 12px !important;
-    width: auto !important;
-    max-width: none !important;
-  }
-
-  .sidebar,
-  .side-menu,
-  .app-sidebar,
-  aside.sidebar {
-    width: auto !important;
   }
 }
