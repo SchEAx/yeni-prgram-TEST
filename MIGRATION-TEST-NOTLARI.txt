@@ -131,3 +131,10 @@ v14.1:
 - Kullanıcı / yetki ve form gridleri minmax(0,...) ile viewport içine kilitlendi.
 - Uzun log ve kullanıcı metinleri kartları genişletemez.
 - Sekme değişiminde olası yatay body scroll sıfırlanır.
+
+v14.2:
+- Kök hata bulundu: Kategori Değerleri, Sipariş Önerisi, Yönetim, Ayarlar, Kullanıcılar ve Loglar HTML'de appShell kapanışından sonra kalmış.
+- Bu sayfaların tamamı gerçek GarageFlow içerik kolonuna, appShell içine taşındı.
+- Önceki CSS overflow yamalarının neden etkisiz kaldığı bu yapısal hataydı.
+- Kategori Değerleri desktop sol menü hizası eski center kuralında doğrudan düzeltildi.
+- Mobil/tablette kategori sekmesi üst şeritte ortalı kalır.

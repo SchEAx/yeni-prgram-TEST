@@ -932,7 +932,7 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
 .migration-test-mode #nav-logs:not(.hidden){display:block!important;}
 
 /* Migration Test v10 - Kategori Değerleri artık PostgreSQL API üzerinde aktif. */
-.migration-test-mode #nav-categoryValues:not(.hidden){display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;width:100%!important;justify-self:stretch!important;}
+.migration-test-mode #nav-categoryValues:not(.hidden){display:flex!important;align-items:center!important;justify-content:flex-start!important;text-align:left!important;width:100%!important;justify-self:stretch!important;}
 
 
 /* v10.1 - responsive nav alignment */
@@ -1641,5 +1641,65 @@ body{
 @media(max-width:560px){
   .theme-picker{
     grid-template-columns:1fr!important;
+  }
+}
+
+
+/* ==========================================================
+   GarageFlow v14.2 - gerçek kök düzeltme
+   ========================================================== */
+
+/* appShell içindeki bütün sayfalar sidebar kolonundan başlamalı. */
+@media(min-width:1080px){
+  #appShell > .page{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  #appShell > .page > .card,
+  #appShell > .page > section,
+  #appShell > .page > .grid-2{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin-left:0!important;
+    margin-right:0!important;
+  }
+
+  .migration-test-mode #nav-categoryValues:not(.hidden){
+    justify-content:flex-start!important;
+    text-align:left!important;
+  }
+}
+
+/* Eski dışarı taşan sayfalardan kalan yatay genişlik davranışını kapat. */
+#page-categoryValues,
+#page-orderSuggestion,
+#page-management,
+#page-settings,
+#page-users,
+#page-logs{
+  box-sizing:border-box;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-x:clip;
+}
+
+/* Sadece gerçek tablo/listeler kendi içinde kayabilsin. */
+#page-categoryValues .table-wrap,
+#page-orderSuggestion .table-wrap,
+#page-users .table-wrap,
+#page-logs .table-wrap{
+  overflow-x:auto!important;
+}
+
+/* Mobil/tablette kategori sekmesi diğer üst sekmeler gibi ortalı. */
+@media(max-width:1079px){
+  .migration-test-mode #nav-categoryValues:not(.hidden){
+    justify-content:center!important;
+    text-align:center!important;
   }
 }

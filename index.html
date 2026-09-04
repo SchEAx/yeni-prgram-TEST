@@ -20,8 +20,8 @@
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="Garage Stok" name="apple-mobile-web-app-title"/>
-<link href="manifest.webmanifest?v=14.1" rel="manifest"/>
-<link href="style.css?v=14.1" rel="stylesheet"/>
+<link href="manifest.webmanifest?v=14.2" rel="manifest"/>
+<link href="style.css?v=14.2" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -424,23 +424,8 @@
 </section>
 </section>
 </div>
-</div>
-<div class="modal-backdrop hidden" id="saleFavoriteEditor">
-<div class="modal-card">
-<div class="section-head compact">
-<h2>Favori Satış Butonları</h2>
-<button class="btn ghost" onclick="closeSaleFavoritesEditor()" type="button">Kapat</button>
-</div>
-<p class="muted">Her satıra bir buton adı yaz. Örn: Paspas, LED, Bagaj Havuzu</p>
-<textarea id="saleFavoriteTextarea" placeholder="Paspas
-Bagaj Havuzu
-LED" rows="8"></textarea>
-<div class="row-gap" style="margin-top:12px">
-<button class="btn success" onclick="saveSaleFavoritesFromEditor()" type="button">Kaydet</button>
-<button class="btn secondary" onclick="resetSaleFavorites()" type="button">Varsayılana Dön</button>
-</div>
-</div>
-</div>
+
+
 <div class="page hidden" id="page-categoryValues">
 <section class="card">
 <div class="section-head">
@@ -481,6 +466,7 @@ LED" rows="8"></textarea>
 <div id="categoryValueDetail"><div class="empty-state">Veri bekleniyor...</div></div>
 </section>
 </div>
+
 <div class="page hidden" id="page-orderSuggestion">
 <section class="card">
 <div class="section-head">
@@ -510,6 +496,7 @@ LED" rows="8"></textarea>
 <div id="orderSuggestionList"><div class="empty-state">Veri bekleniyor...</div></div>
 </section>
 </div>
+
 <div class="page hidden" id="page-surveys">
 <section class="card">
 <div class="section-head compact">
@@ -532,34 +519,7 @@ LED" rows="8"></textarea>
 </div>
 </section>
 </div>
-<style>
-      #page-surveys .survey-admin-note{background:#172033;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:14px;color:#dbeafe}
-      #page-surveys .survey-admin-note strong{color:#93c5fd}
-      #page-surveys .survey-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0}
-      #page-surveys .survey-stats .stat-card{padding:16px;border-radius:14px;border:1px solid #334155;background:#111827;color:#f8fafc;box-shadow:none}
-      #page-surveys .survey-stats .stat-card:nth-child(1){border-color:#38bdf8;background:#0f2537}
-      #page-surveys .survey-stats .stat-card:nth-child(2){border-color:#22c55e;background:#10291a}
-      #page-surveys .survey-stats .stat-card:nth-child(3){border-color:#f97316;background:#301c0d}
-      #page-surveys .survey-stats .stat-card:nth-child(4){border-color:#a78bfa;background:#221735}
-      #page-surveys .survey-stats .stat-card b{display:block;font-size:30px;color:#ffffff;line-height:1.1;margin-bottom:10px}
-      #page-surveys .survey-stats .stat-card:nth-child(1) b{color:#7dd3fc}
-      #page-surveys .survey-stats .stat-card:nth-child(2) b{color:#86efac}
-      #page-surveys .survey-stats .stat-card:nth-child(3) b{color:#fdba74}
-      #page-surveys .survey-stats .stat-card:nth-child(4) b{color:#c4b5fd}
-      #page-surveys .survey-stats .stat-card span{color:#e5e7eb;font-size:13px}
-      #page-surveys .survey-table{width:100%;border-collapse:separate;border-spacing:0;margin:10px 0 20px;background:#111827;border:1px solid #334155;border-radius:12px;overflow:hidden;color:#f8fafc}
-      #page-surveys .survey-table th{background:#1f2937;color:#93c5fd;font-weight:800}
-      #page-surveys .survey-table th,#page-surveys .survey-table td{border-bottom:1px solid #334155;padding:11px;text-align:left;color:#f8fafc}
-      #page-surveys .survey-table tr:last-child td{border-bottom:none}
-      #page-surveys .survey-table td:last-child{font-weight:800;color:#86efac}
-      #page-surveys .survey-comment{border:1px solid #334155;border-radius:12px;padding:12px;margin:10px 0;background:#111827;color:#f8fafc}
-      #page-surveys .survey-comment.danger{border-color:#ef4444;background:#2a1111}
-      #page-surveys .survey-comment strong{color:#93c5fd}
-      #page-surveys .survey-comment p{margin:8px 0 0;white-space:pre-wrap;color:#f8fafc}
-      #page-surveys .survey-comment small{display:block;color:#cbd5e1;margin-top:6px}
-    
-.purchase-order-grid{align-items:start}.purchase-order-head-fields{margin:14px 0}.purchase-order-head-fields .full{grid-column:1/-1}.purchase-order-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border,#dfe5ec)}.purchase-draft-item,.purchase-order-card{border:1px solid var(--border,#dfe5ec);border-radius:14px;padding:12px;background:var(--card,#fff)}.purchase-draft-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.purchase-draft-item input{width:84px}.purchase-order-card .order-items{margin-top:10px;display:grid;gap:7px}.purchase-order-card .order-line{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;border-radius:9px;background:rgba(127,127,127,.08)}.purchase-order-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.nav-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;margin-left:4px}.nav-count.hidden{display:none}@media(max-width:720px){.purchase-draft-item{grid-template-columns:1fr auto}.purchase-draft-item .remove-order-item{grid-column:1/-1}.purchase-order-footer{align-items:stretch;flex-direction:column}}
-</style>
+
 <div class="page hidden" id="page-management">
 <section class="card management-card">
 <div class="section-head">
@@ -608,6 +568,7 @@ LED" rows="8"></textarea>
 </div>
 </section>
 </div>
+
 <div class="page hidden" id="page-settings">
 <section class="card settings-card">
 <div class="section-head"><div><h2>Ayarlar</h2><p class="muted">Program görünümünü kişiselleştir. Bu sekme Admin tarafından personele özel açılabilir.</p></div></div>
@@ -644,6 +605,7 @@ LED" rows="8"></textarea>
 
 </section>
 </div>
+
 <div class="page hidden" id="page-users">
 <section class="grid-2 users-permission-grid">
 <div class="card">
@@ -678,6 +640,7 @@ LED" rows="8"></textarea>
 </div>
 </section>
 </div>
+
 <div class="page hidden" id="page-logs">
 <section class="card">
 <div class="section-head compact">
@@ -690,6 +653,59 @@ LED" rows="8"></textarea>
 <div class="movement-list" id="activityLogList"><div class="empty-state">Kayıt bekleniyor...</div></div>
 </section>
 </div>
+
+</div>
+<div class="modal-backdrop hidden" id="saleFavoriteEditor">
+<div class="modal-card">
+<div class="section-head compact">
+<h2>Favori Satış Butonları</h2>
+<button class="btn ghost" onclick="closeSaleFavoritesEditor()" type="button">Kapat</button>
+</div>
+<p class="muted">Her satıra bir buton adı yaz. Örn: Paspas, LED, Bagaj Havuzu</p>
+<textarea id="saleFavoriteTextarea" placeholder="Paspas
+Bagaj Havuzu
+LED" rows="8"></textarea>
+<div class="row-gap" style="margin-top:12px">
+<button class="btn success" onclick="saveSaleFavoritesFromEditor()" type="button">Kaydet</button>
+<button class="btn secondary" onclick="resetSaleFavorites()" type="button">Varsayılana Dön</button>
+</div>
+</div>
+</div>
+
+
+
+<style>
+      #page-surveys .survey-admin-note{background:#172033;border:1px solid #334155;border-radius:12px;padding:12px;margin-bottom:14px;color:#dbeafe}
+      #page-surveys .survey-admin-note strong{color:#93c5fd}
+      #page-surveys .survey-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:14px 0}
+      #page-surveys .survey-stats .stat-card{padding:16px;border-radius:14px;border:1px solid #334155;background:#111827;color:#f8fafc;box-shadow:none}
+      #page-surveys .survey-stats .stat-card:nth-child(1){border-color:#38bdf8;background:#0f2537}
+      #page-surveys .survey-stats .stat-card:nth-child(2){border-color:#22c55e;background:#10291a}
+      #page-surveys .survey-stats .stat-card:nth-child(3){border-color:#f97316;background:#301c0d}
+      #page-surveys .survey-stats .stat-card:nth-child(4){border-color:#a78bfa;background:#221735}
+      #page-surveys .survey-stats .stat-card b{display:block;font-size:30px;color:#ffffff;line-height:1.1;margin-bottom:10px}
+      #page-surveys .survey-stats .stat-card:nth-child(1) b{color:#7dd3fc}
+      #page-surveys .survey-stats .stat-card:nth-child(2) b{color:#86efac}
+      #page-surveys .survey-stats .stat-card:nth-child(3) b{color:#fdba74}
+      #page-surveys .survey-stats .stat-card:nth-child(4) b{color:#c4b5fd}
+      #page-surveys .survey-stats .stat-card span{color:#e5e7eb;font-size:13px}
+      #page-surveys .survey-table{width:100%;border-collapse:separate;border-spacing:0;margin:10px 0 20px;background:#111827;border:1px solid #334155;border-radius:12px;overflow:hidden;color:#f8fafc}
+      #page-surveys .survey-table th{background:#1f2937;color:#93c5fd;font-weight:800}
+      #page-surveys .survey-table th,#page-surveys .survey-table td{border-bottom:1px solid #334155;padding:11px;text-align:left;color:#f8fafc}
+      #page-surveys .survey-table tr:last-child td{border-bottom:none}
+      #page-surveys .survey-table td:last-child{font-weight:800;color:#86efac}
+      #page-surveys .survey-comment{border:1px solid #334155;border-radius:12px;padding:12px;margin:10px 0;background:#111827;color:#f8fafc}
+      #page-surveys .survey-comment.danger{border-color:#ef4444;background:#2a1111}
+      #page-surveys .survey-comment strong{color:#93c5fd}
+      #page-surveys .survey-comment p{margin:8px 0 0;white-space:pre-wrap;color:#f8fafc}
+      #page-surveys .survey-comment small{display:block;color:#cbd5e1;margin-top:6px}
+    
+.purchase-order-grid{align-items:start}.purchase-order-head-fields{margin:14px 0}.purchase-order-head-fields .full{grid-column:1/-1}.purchase-order-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border,#dfe5ec)}.purchase-draft-item,.purchase-order-card{border:1px solid var(--border,#dfe5ec);border-radius:14px;padding:12px;background:var(--card,#fff)}.purchase-draft-item{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center}.purchase-draft-item input{width:84px}.purchase-order-card .order-items{margin-top:10px;display:grid;gap:7px}.purchase-order-card .order-line{display:flex;justify-content:space-between;gap:12px;padding:7px 9px;border-radius:9px;background:rgba(127,127,127,.08)}.purchase-order-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.nav-count{display:inline-flex;min-width:20px;height:20px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;margin-left:4px}.nav-count.hidden{display:none}@media(max-width:720px){.purchase-draft-item{grid-template-columns:1fr auto}.purchase-draft-item .remove-order-item{grid-column:1/-1}.purchase-order-footer{align-items:stretch;flex-direction:column}}
+</style>
+
+
+
+
 <div class="modal-backdrop hidden" id="staffEditor">
 <div class="modal-card wide">
 <div class="section-head compact">
@@ -793,7 +809,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=14.1"></script>
+<script src="js/core.js?v=14.2"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -802,12 +818,12 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=14.1"></script>
+<script src="js/navigation.js?v=14.2"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=14.1"></script>
-<script src="js/events.js?v=14.1"></script>
-<script src="js/excel.js?v=14.1"></script>
-<script src="js/migration-excel.js?v=14.1"></script>
-<script src="app.js?v=14.1"></script>
+<script src="js/migration-api.js?v=14.2"></script>
+<script src="js/events.js?v=14.2"></script>
+<script src="js/excel.js?v=14.2"></script>
+<script src="js/migration-excel.js?v=14.2"></script>
+<script src="app.js?v=14.2"></script>
 </body>
 </html>
