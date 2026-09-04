@@ -1706,3 +1706,153 @@ body{
     text-align:center!important;
   }
 }
+
+/* ==========================================================
+   GarageFlow v15.2 - Tema tam zemin / yüzey düzeltmesi
+   v14 GarageFlow cilasındaki sabit lacivert renkler tema
+   değişimini ezmesin; tüm ana yüzeyler aktif temadan beslensin.
+   ========================================================== */
+html{
+  background:var(--bg)!important;
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 10% 0%, color-mix(in srgb,var(--primary) 13%,transparent), transparent 34%),
+    radial-gradient(circle at 95% 12%, color-mix(in srgb,var(--success) 9%,transparent), transparent 30%),
+    linear-gradient(180deg,var(--bg) 0%,color-mix(in srgb,var(--bg) 68%,var(--bg-2)) 48%,var(--bg-2) 100%)!important;
+  background-attachment:fixed!important;
+}
+
+/* Üst bar ve sol/üst navigasyon artık temaya bağlı. */
+.topbar{
+  background:color-mix(in srgb,var(--panel) 90%,transparent)!important;
+  border-color:var(--border)!important;
+}
+
+.brand-accent{
+  color:var(--primary)!important;
+}
+
+.flow-route-pill{
+  color:color-mix(in srgb,var(--primary) 42%,var(--text-strong))!important;
+  border-color:color-mix(in srgb,var(--primary) 38%,var(--border))!important;
+  background:color-mix(in srgb,var(--primary) 11%,var(--card))!important;
+}
+
+.flow-live-pill{
+  color:color-mix(in srgb,var(--success) 42%,var(--text-strong))!important;
+  border-color:color-mix(in srgb,var(--success) 34%,var(--border))!important;
+  background:color-mix(in srgb,var(--success) 9%,var(--card))!important;
+}
+
+.flow-live-pill i{
+  background:var(--success)!important;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--success) 12%,transparent)!important;
+}
+
+/* GarageFlow v14'ün sabit lacivert kart cilasını tema değişkenleriyle ez. */
+.card,
+.management-tool-card,
+.inner-card,
+.purchase-order-card,
+.purchase-draft-item{
+  border-color:var(--border)!important;
+  background:linear-gradient(
+    180deg,
+    color-mix(in srgb,var(--card) 94%,var(--panel-2)),
+    var(--card)
+  )!important;
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 color-mix(in srgb,var(--text) 2%,transparent)!important;
+}
+
+/* Formlar ve tablolar da seçilen temanın yüzeyini kullansın. */
+input,
+textarea,
+select{
+  background:var(--input-bg)!important;
+  color:var(--input-text)!important;
+  border-color:var(--border)!important;
+}
+
+input:hover,
+textarea:hover,
+select:hover{
+  border-color:color-mix(in srgb,var(--primary) 30%,var(--border))!important;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  background:var(--input-bg)!important;
+  border-color:color-mix(in srgb,var(--primary) 78%,var(--border))!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 15%,transparent)!important;
+}
+
+.table-wrap thead th{
+  background:var(--table-head)!important;
+  color:var(--text-strong)!important;
+}
+
+tbody tr:hover{
+  background:color-mix(in srgb,var(--primary) 5%,transparent)!important;
+}
+
+@media(min-width:1080px){
+  .top-nav{
+    background:color-mix(in srgb,var(--panel) 91%,transparent)!important;
+    border-color:var(--border)!important;
+  }
+
+  .top-nav::before{
+    color:var(--muted)!important;
+  }
+
+  .top-nav button{
+    color:var(--text)!important;
+  }
+
+  .top-nav button:hover{
+    color:var(--text-strong)!important;
+    background:var(--soft-surface-2)!important;
+  }
+
+  .top-nav button.active{
+    color:var(--primary-contrast)!important;
+    background:linear-gradient(
+      135deg,
+      color-mix(in srgb,var(--primary) 96%,white 4%),
+      color-mix(in srgb,var(--primary) 82%,black 18%)
+    )!important;
+    border-color:color-mix(in srgb,var(--primary) 42%,var(--border))!important;
+    box-shadow:
+      0 8px 22px color-mix(in srgb,var(--primary) 20%,transparent),
+      inset 0 1px 0 color-mix(in srgb,var(--primary-contrast) 12%,transparent)!important;
+  }
+
+  .top-nav button.active::after{
+    background:color-mix(in srgb,var(--primary-contrast) 82%,var(--primary))!important;
+    box-shadow:0 0 0 4px color-mix(in srgb,var(--primary-contrast) 8%,transparent)!important;
+  }
+}
+
+@media(max-width:1079px){
+  .top-nav{
+    background:linear-gradient(
+      180deg,
+      color-mix(in srgb,var(--panel) 98%,transparent),
+      color-mix(in srgb,var(--panel) 91%,transparent)
+    )!important;
+    border-color:var(--border)!important;
+  }
+}
+
+/* Migration test rozetleri tema dışı sabit lacivert kalmasın. */
+body::before{
+  background:color-mix(in srgb,var(--panel) 94%,transparent)!important;
+  color:var(--text)!important;
+  border-color:var(--border)!important;
+}

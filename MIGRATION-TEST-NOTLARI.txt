@@ -159,3 +159,10 @@ v14.3:
 - APP_VERSION ile PWA_BUILD_VERSION tek kaynaktan besleniyor.
 - Service worker kayıt sürümü ve cache adı 15.1'e yükseltildi.
 - JS/CSS asset query sürümleri 15.1'e yükseltildi; eski tarayıcı/SW cache'inin kalması engellendi.
+
+
+=== v15.2 ===
+- Tema değişince GarageFlow v14 katmanında sabit kalan lacivert sayfa zemini kaldırıldı.
+- Body arka planı, header, sidebar/üst menü, kartlar, form alanları ve tablo başlıkları aktif tema değişkenlerinden besleniyor.
+- Garage Exclusive, Midnight Blue, Emerald, Carbon Orange ve Light temalarında ana sayfa zemini artık tam değişiyor.
+- Asset query, version.json ve Service Worker cache sürümü 15.2'ye yükseltildi.

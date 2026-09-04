@@ -211,7 +211,7 @@ async function registerPwaServiceWorker() {
   if (!("serviceWorker" in navigator)) return null;
 
   const registration = await navigator.serviceWorker.register(
-    "./sw.js?v=15.1",
+    "./sw.js?v=15.2",
     { updateViaCache: "none" }
   );
 
