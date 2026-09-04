@@ -93,3 +93,10 @@ v12.0:
 - Rezerve stok altına düşme, farklı üründe barkod çakışması ve yanlış confirm_count backend tarafından engellenir.
 - Yükleme tek transaction içinde uygulanır ve stok farkları giris/cikis hareketi olarak yazılır.
 - excel_stock_upload activity logunu backend oluşturur; frontend çift log yazmaz.
+
+v12.1:
+- Excel önizleme modalı ile aktarım progress penceresinin üst üste görünmesi düzeltildi.
+- Önizleme açılmadan progress penceresi kesin olarak kapatılır.
+- Uygula onayından sonra progress yeniden açılır.
+- Eski 45 / 100 gibi sahte aktarım sayacı kaldırıldı.
+- Progress artık gerçek Excel satır sayısını ve işlem aşamasını gösterir.

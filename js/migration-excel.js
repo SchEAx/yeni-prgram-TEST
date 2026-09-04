@@ -178,6 +178,31 @@ function migrationExcelErrorText(errors = []) {
   return lines.join("\n");
 }
 
+
+function migrationExcelProgressStage({
+  title = "Excel Hazırlanıyor 📄",
+  text = "Hazırlanıyor...",
+  percent = 0
+} = {}) {
+  createExcelProgress();
+
+  const titleEl = document.querySelector("#excelProgressBox .excel-progress-title");
+  const fill = document.getElementById("excelProgressFill");
+  const textEl = document.getElementById("excelProgressText");
+  const percentEl = document.getElementById("excelProgressPercent");
+
+  const safePercent = Math.max(0, Math.min(100, Number(percent || 0)));
+
+  if (titleEl) titleEl.textContent = title;
+  if (fill) fill.style.width = `${safePercent}%`;
+  if (textEl) textEl.textContent = text;
+  if (percentEl) percentEl.textContent = `${safePercent}%`;
+}
+
+function migrationCloseExcelProgressNow() {
+  document.getElementById("excelProgressBox")?.remove();
+}
+
 function migrationExcelPreviewText(preview = {}, skipped = 0) {
   return [
     `Toplam işlenecek satır: ${Number(preview.row_count || 0)}`,
@@ -216,9 +241,13 @@ uploadStockExcel = async function(event) {
     }
 
     showToast("Excel okunuyor...");
-    createExcelProgress();
+
+    migrationExcelProgressStage({
+      title: "Excel Hazırlanıyor 📄",
+      text: "Dosya okunuyor...",
+      percent: 15
+    });
     progressOpened = true;
-    updateExcelProgress(10, 100, 0, 0);
 
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
@@ -233,7 +262,11 @@ uploadStockExcel = async function(event) {
       throw new Error(`Tek yüklemede en fazla 15.000 satır destekleniyor. Bu dosya: ${rows.length}`);
     }
 
-    updateExcelProgress(30, 100, 0, 0);
+    migrationExcelProgressStage({
+      title: "Excel Hazırlanıyor 📄",
+      text: `${rows.length.toLocaleString("tr-TR")} satır okundu. PostgreSQL ön kontrolü yapılıyor...`,
+      percent: 35
+    });
 
     const previewPayload = await apiFetch("/api/excel/import/preview", {
       method: "POST",
@@ -243,10 +276,14 @@ uploadStockExcel = async function(event) {
     const preview = previewPayload.preview || {};
     const errors = Array.isArray(previewPayload.errors) ? previewPayload.errors : [];
 
-    updateExcelProgress(45, 100, 0, errors.length);
+    migrationExcelProgressStage({
+      title: "Excel Kontrol Edildi ✅",
+      text: `${rows.length.toLocaleString("tr-TR")} satır kontrol edildi${errors.length ? ` · ${errors.length} hata bulundu` : " · hata yok"}.`,
+      percent: 55
+    });
 
     if (previewPayload.can_apply !== true) {
-      closeExcelProgress(0);
+      migrationCloseExcelProgressNow();
       progressOpened = false;
 
       await appConfirm(
@@ -262,6 +299,11 @@ uploadStockExcel = async function(event) {
       return;
     }
 
+    // Önizleme onay penceresini açmadan önce progress kesin olarak kapanır.
+    // Böylece iki modal hiçbir zaman üst üste görünmez.
+    migrationCloseExcelProgressNow();
+    progressOpened = false;
+
     const finalConfirm = await appConfirm(
       `${migrationExcelPreviewText(preview, parsed.skipped)}\n\nBu işlem tek transaction içinde uygulanacak. Devam edilsin mi?`,
       {
@@ -273,13 +315,16 @@ uploadStockExcel = async function(event) {
     );
 
     if (!finalConfirm) {
-      closeExcelProgress(0);
-      progressOpened = false;
       input.value = "";
       return;
     }
 
-    updateExcelProgress(65, 100, 0, 0);
+    migrationExcelProgressStage({
+      title: "Excel Aktarılıyor 🚀",
+      text: `${rows.length.toLocaleString("tr-TR")} satır PostgreSQL'e tek transaction içinde uygulanıyor...`,
+      percent: 70
+    });
+    progressOpened = true;
 
     const applyPayload = await apiFetch("/api/excel/import/apply", {
       method: "POST",
@@ -290,15 +335,19 @@ uploadStockExcel = async function(event) {
     });
 
     const result = applyPayload.result || {};
+    const processed = Number(result.processed_rows || rows.length);
 
-    updateExcelProgress(
-      100,
-      100,
-      Number(result.processed_rows || rows.length),
-      0
-    );
+    migrationExcelProgressStage({
+      title: "Excel Aktarımı Tamamlandı ✅",
+      text:
+        `${processed.toLocaleString("tr-TR")} / ${rows.length.toLocaleString("tr-TR")} satır tamamlandı · ` +
+        `${Number(result.inserted_products || 0)} yeni · ` +
+        `${Number(result.updated_products || 0)} güncelleme · ` +
+        `${Number(result.stock_movements || 0)} stok hareketi`,
+      percent: 100
+    });
 
-    closeExcelProgress();
+    setTimeout(() => migrationCloseExcelProgressNow(), 900);
     progressOpened = false;
 
     // Backend zaten excel_stock_upload logunu yazıyor. Çift log oluşturma.
@@ -327,7 +376,7 @@ uploadStockExcel = async function(event) {
 
   } catch (err) {
     console.error(err);
-    if (progressOpened) closeExcelProgress(0);
+    if (progressOpened) migrationCloseExcelProgressNow();
     showToast(err?.message || "Excel yüklenemedi", true);
     if (input) input.value = "";
   }
