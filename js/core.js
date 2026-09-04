@@ -1,5 +1,5 @@
 // Core: yapılandırma, state, DOM, yetkiler, bildirimler ve ortak yardımcılar
-const APP_VERSION = '3.13.1-migration-test-jwt-10.0';
+const APP_VERSION = '3.13.1-migration-test-jwt-10.1';
 let isOffline = !navigator.onLine;
 let globalLoading = false;
 

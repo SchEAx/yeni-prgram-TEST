@@ -18,7 +18,7 @@
 </script>
 <link href="/logo.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
-<link href="style.css?v=10.0" rel="stylesheet"/>
+<link href="style.css?v=10.1" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -734,6 +734,31 @@ LED" rows="8"></textarea>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop hidden" id="categoryPriceEditorModal">
+  <div class="modal-card category-price-editor-card">
+    <div class="section-head compact">
+      <div>
+        <h2>💰 Ürün Fiyatlarını Düzenle</h2>
+        <p class="muted" id="categoryPriceEditorTitle">Kategori seçilmedi</p>
+      </div>
+      <button class="btn ghost" type="button" onclick="closeCategoryPriceEditor()">Kapat</button>
+    </div>
+    <div class="category-price-editor-tools">
+      <div>
+        <label>Kategori</label>
+        <input id="categoryPriceEditorCategory" type="text" disabled/>
+      </div>
+      <div>
+        <label>Ürün / Marka / Araç Ara</label>
+        <input id="categoryPriceEditorSearch" type="search" placeholder="Örn: Corolla, Rizline, 2022..." oninput="scheduleCategoryPriceEditorSearch()"/>
+      </div>
+      <button class="btn secondary" type="button" onclick="loadCategoryPriceEditorProducts()">Yenile</button>
+    </div>
+    <div class="muted" id="categoryPriceEditorInfo">Ürünler yükleniyor...</div>
+    <div id="categoryPriceEditorList" style="margin-top:10px"></div>
+  </div>
+</div>
 <div class="toast hidden" id="toast"></div>
 <div aria-modal="true" class="app-confirm-overlay hidden" id="appConfirmOverlay" role="dialog">
 <div class="app-confirm-card">
@@ -752,7 +777,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=10.0"></script>
+<script src="js/core.js?v=10.1"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -761,11 +786,11 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=10.0"></script>
+<script src="js/navigation.js?v=10.1"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=10.0"></script>
-<script src="js/events.js?v=10.0"></script>
+<script src="js/migration-api.js?v=10.1"></script>
+<script src="js/events.js?v=10.1"></script>
 <script src="js/excel.js"></script>
-<script src="app.js?v=10.0"></script>
+<script src="app.js?v=10.1"></script>
 </body>
 </html>

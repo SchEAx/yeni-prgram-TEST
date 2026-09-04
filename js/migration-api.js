@@ -440,6 +440,156 @@ applyCategoryPriceUpdate = async function() {
 };
 window.applyCategoryPriceUpdate = applyCategoryPriceUpdate;
 
+
+// ---- v10.1 Kategori içinden ürün bazlı fiyat düzenleme ----
+let migrationCategoryPriceEditorCategory = '';
+let migrationCategoryPriceEditorRows = [];
+let migrationCategoryPriceEditorTimer = null;
+
+window.openCategoryPriceEditorFromButton = function(button) {
+  const category = String(button?.dataset?.category || '').trim();
+  return openCategoryPriceEditor(category);
+};
+
+window.openCategoryPriceEditor = async function(category) {
+  if (!requireRoleAction(['admin'], 'Ürün fiyatlarını sadece Admin düzenleyebilir')) return;
+  migrationCategoryPriceEditorCategory = String(category || '').trim();
+  if (!migrationCategoryPriceEditorCategory) return showToast('Kategori bulunamadı', true);
+
+  const modal = document.getElementById('categoryPriceEditorModal');
+  const categoryInput = document.getElementById('categoryPriceEditorCategory');
+  const title = document.getElementById('categoryPriceEditorTitle');
+  const search = document.getElementById('categoryPriceEditorSearch');
+  if (categoryInput) categoryInput.value = migrationCategoryPriceEditorCategory;
+  if (title) title.textContent = `${migrationCategoryPriceEditorCategory} · ürün bazlı alış / satış fiyatı düzenleme`;
+  if (search) search.value = '';
+  modal?.classList.remove('hidden');
+  await loadCategoryPriceEditorProducts();
+};
+
+window.closeCategoryPriceEditor = function() {
+  document.getElementById('categoryPriceEditorModal')?.classList.add('hidden');
+  migrationCategoryPriceEditorRows = [];
+};
+
+window.scheduleCategoryPriceEditorSearch = function() {
+  clearTimeout(migrationCategoryPriceEditorTimer);
+  migrationCategoryPriceEditorTimer = setTimeout(() => {
+    loadCategoryPriceEditorProducts().catch(() => {});
+  }, 350);
+};
+
+window.loadCategoryPriceEditorProducts = async function() {
+  if (!migrationCategoryPriceEditorCategory) return;
+  const list = document.getElementById('categoryPriceEditorList');
+  const info = document.getElementById('categoryPriceEditorInfo');
+  const q = String(document.getElementById('categoryPriceEditorSearch')?.value || '').trim();
+  if (list) list.innerHTML = '<div class="empty-state">Ürünler yükleniyor...</div>';
+  if (info) info.textContent = 'Aranıyor...';
+
+  try {
+    const params = new URLSearchParams();
+    params.set('category', migrationCategoryPriceEditorCategory);
+    if (q) params.set('q', q);
+    params.set('limit', '100');
+    const payload = await apiFetch('/api/products?' + params.toString());
+    migrationCategoryPriceEditorRows = (payload.products || []).map(mapProduct);
+    renderCategoryPriceEditorProducts();
+  } catch (err) {
+    if (list) list.innerHTML = `<div class="empty-state">${escapeHtml(err.message || 'Ürünler alınamadı')}</div>`;
+    if (info) info.textContent = 'Yükleme başarısız';
+  }
+};
+
+function renderCategoryPriceEditorProducts() {
+  const list = document.getElementById('categoryPriceEditorList');
+  const info = document.getElementById('categoryPriceEditorInfo');
+  if (!list) return;
+  const rows = migrationCategoryPriceEditorRows || [];
+  if (info) info.textContent = rows.length >= 100
+    ? 'İlk 100 sonuç gösteriliyor. Daha hızlı bulmak için arama kutusunu kullan.'
+    : `${rows.length} ürün bulundu.`;
+
+  if (!rows.length) {
+    list.innerHTML = '<div class="empty-state">Bu aramada ürün bulunamadı.</div>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div class="table-wrap">
+      <table class="category-price-editor-table">
+        <thead><tr><th>Ürün</th><th>Alış Fiyatı</th><th>Ort. Satış Fiyatı</th><th>İşlem</th></tr></thead>
+        <tbody>${rows.map(p => `
+          <tr data-price-row="${escapeHtml(String(p.id))}">
+            <td>
+              <strong>${escapeHtml(p.name || p.category || '-')}</strong>
+              <div class="category-price-editor-meta">${escapeHtml([p.productBrand, p.carBrand, p.carModel, p.carType, p.vehicleYear].filter(Boolean).join(' · '))}</div>
+            </td>
+            <td><input data-price-purchase type="number" min="0" step="0.01" value="${Number(p.purchasePrice || 0)}"></td>
+            <td><input data-price-sale type="number" min="0" step="0.01" value="${Number(p.averageSalePrice || 0)}"></td>
+            <td>
+              <div class="action-group">
+                <button class="action-btn edit" type="button" onclick="saveCategoryPriceEditorProduct('${escapeHtml(String(p.id))}', this)">Kaydet</button>
+                <button class="action-btn" type="button" style="background:#475569" onclick="openFullProductFromPriceEditor('${escapeHtml(String(p.id))}')">Kartı Aç</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+window.saveCategoryPriceEditorProduct = async function(productId, button) {
+  if (!requireRoleAction(['admin'], 'Ürün fiyatlarını sadece Admin düzenleyebilir')) return;
+  const tr = button?.closest?.('tr');
+  if (!tr) return;
+  const purchase = Number(tr.querySelector('[data-price-purchase]')?.value || 0);
+  const sale = Number(tr.querySelector('[data-price-sale]')?.value || 0);
+  if (!Number.isFinite(purchase) || !Number.isFinite(sale) || purchase < 0 || sale < 0) {
+    return showToast('Fiyatlar 0 veya daha büyük olmalı', true);
+  }
+
+  const oldText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Kaydediliyor...';
+  try {
+    const payload = await apiFetch('/api/products/' + encodeURIComponent(productId), {
+      method: 'PATCH',
+      body: {
+        purchase_price: Math.round((purchase + Number.EPSILON) * 100) / 100,
+        average_sale_price: Math.round((sale + Number.EPSILON) * 100) / 100
+      }
+    });
+    const fresh = payload?.product ? mapProduct(payload.product) : null;
+    if (fresh) {
+      const idx = migrationCategoryPriceEditorRows.findIndex(p => String(p.id) === String(productId));
+      if (idx >= 0) migrationCategoryPriceEditorRows[idx] = fresh;
+      await refreshMigrationProductState(productId, { product: payload.product }).catch(() => {});
+    }
+    await logActivity(
+      'product_price_update',
+      `${fresh?.name || 'Ürün'} fiyatı düzenlendi · Alış: ${formatTL(purchase)} · Ort. Satış: ${formatTL(sale)}`,
+      'stock_products',
+      productId
+    ).catch(() => {});
+    showToast('Ürün fiyatı güncellendi ✅');
+    await loadCategoryValues();
+  } catch (err) {
+    showToast(err.message || 'Fiyat güncellenemedi', true);
+  } finally {
+    button.disabled = false;
+    button.textContent = oldText;
+  }
+};
+
+window.openFullProductFromPriceEditor = function(productId) {
+  const product = migrationCategoryPriceEditorRows.find(p => String(p.id) === String(productId));
+  if (!product) return showToast('Ürün bulunamadı', true);
+  state.products = [product, ...(state.products || []).filter(p => String(p.id) !== String(productId))];
+  closeCategoryPriceEditor();
+  editProduct(productId);
+};
+
 // ---- Personel / rol okumaları ----
 loadStaffListFromSupabase = async function() {
   const payload = await apiFetch("/api/users");

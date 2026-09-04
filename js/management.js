@@ -147,8 +147,8 @@ function renderCategoryValues() {
   if (el.categoryValueDetail) {
     el.categoryValueDetail.innerHTML = rows.length ? `
       <div class="table-wrap"><table class="category-value-table">
-        <thead><tr><th>Kategori</th><th>Stok</th><th>Ort. Alış</th><th>Ort. Satış</th><th>Alış Toplam</th><th>Satış Toplam</th><th>Fark</th></tr></thead>
-        <tbody>${rows.map(r => `<tr class="${r.hasPrice ? "" : "missing-price"}"><td>${escapeHtml(r.category)}${r.hasPrice ? "" : " <span class='muted'>(fiyat yok)</span>"}</td><td>${r.qty}</td><td>${formatTL(r.purchase)}</td><td>${formatTL(r.sale)}</td><td>${formatTL(r.totalPurchase)}</td><td>${formatTL(r.totalSale)}</td><td>${formatTL(r.estimatedDiff)}</td></tr>`).join("")}</tbody>
+        <thead><tr><th>Kategori</th><th>Stok</th><th>Ort. Alış</th><th>Ort. Satış</th><th>Alış Toplam</th><th>Satış Toplam</th><th>Fark</th><th>Fiyat</th></tr></thead>
+        <tbody>${rows.map(r => `<tr class="${r.hasPrice ? "" : "missing-price"}"><td>${escapeHtml(r.category)}${r.hasPrice ? "" : " <span class='muted'>(fiyat yok)</span>"}</td><td>${r.qty}</td><td>${formatTL(r.purchase)}</td><td>${formatTL(r.sale)}</td><td>${formatTL(r.totalPurchase)}</td><td>${formatTL(r.totalSale)}</td><td>${formatTL(r.estimatedDiff)}</td><td><button class="action-btn edit category-price-edit-btn" type="button" data-category="${escapeHtml(r.category)}" onclick="openCategoryPriceEditorFromButton(this)">Ürünleri Düzenle</button></td></tr>`).join("")}</tbody>
       </table></div>
     ` : `<div class="empty-state">Hesaplanacak stok bulunamadı.</div>`;
   }
