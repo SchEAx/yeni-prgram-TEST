@@ -26,13 +26,13 @@ function updateBulkPricePreview() {
   const field = el.bulkPriceField?.value || "average_sale_price";
   const mode = el.bulkPriceMode?.value || "percent";
   const amount = Number(el.bulkPriceAmount?.value || 0);
-  if (!category || !(amount > 0)) {
+  if (!category || !Number.isFinite(amount) || (mode === "fixed" ? amount === 0 : amount <= 0)) {
     el.bulkPricePreview.textContent = "Kategori ve tutar seçildiğinde işlem özeti burada görünür.";
     return;
   }
   const count = (state.products || []).filter(p => normalizeText(p.category) === normalizeText(category)).length;
   const fieldLabel = field === "purchase_price" ? "alış fiyatı" : field === "both" ? "alış ve satış fiyatları" : "ortalama satış fiyatı";
-  el.bulkPricePreview.textContent = `${count} ürünün ${fieldLabel} ${mode === "percent" ? `%${amount}` : formatTL(amount)} artırılacak.`;
+  el.bulkPricePreview.textContent = `${count} ürünün ${fieldLabel} ${mode === "percent" ? `%${amount} artırılacak` : amount < 0 ? `${formatTL(Math.abs(amount))} düşürülecek` : `${formatTL(amount)} artırılacak`}.`;
 }
 
 async function applyCategoryPriceUpdate() {
@@ -41,7 +41,14 @@ async function applyCategoryPriceUpdate() {
   const mode = el.bulkPriceMode?.value || "percent";
   const amount = Number(el.bulkPriceAmount?.value || 0);
   if (!category) return showToast("Önce kategori seç", true);
-  if (!(amount > 0)) return showToast("Artış miktarı 0'dan büyük olmalı", true);
+  if (!Number.isFinite(amount) || (mode === "fixed" ? amount === 0 : amount <= 0)) {
+    return showToast(
+      mode === "fixed"
+        ? "Sabit değişim 0 olamaz. Düşürmek için örn. -5000 yazabilirsin."
+        : "Yüzde artış 0'dan büyük olmalı",
+      true
+    );
+  }
 
   const { data, error } = await supabaseClient
     .from("stock_products")
@@ -51,13 +58,13 @@ async function applyCategoryPriceUpdate() {
   if (!data?.length) return showToast("Bu kategoride ürün bulunamadı", true);
 
   const fieldLabel = field === "purchase_price" ? "alış fiyatı" : field === "both" ? "alış ve satış fiyatları" : "ortalama satış fiyatı";
-  const increaseLabel = mode === "percent" ? `%${amount}` : formatTL(amount);
+  const increaseLabel = mode === "percent" ? `%${amount} artırma` : amount < 0 ? `${formatTL(Math.abs(amount))} düşürme` : `${formatTL(amount)} artırma`;
   const zeroCount = data.filter(row => {
     const values = field === "both" ? [row.purchase_price, row.average_sale_price] : [row[field]];
     return values.some(v => Number(v || 0) <= 0);
   }).length;
-  const warning = zeroCount ? `\n\n${zeroCount} üründe mevcut fiyat 0. Yüzde artışta bu fiyatlar 0 kalır; sabit artışta girilen tutar eklenir.` : "";
-  const ok = await appConfirm(`${category} kategorisindeki ${data.length} ürünün ${fieldLabel} ${increaseLabel} artırılacak.${warning}\n\nDevam edilsin mi?`, { title: "Toplu fiyat güncelleme", okText: "Güncelle" });
+  const warning = mode === "fixed" && amount < 0 ? `\n\n0 TL altına düşecek fiyatlar 0 TL olarak kalır.` : zeroCount ? `\n\n${zeroCount} üründe mevcut fiyat 0. Yüzde artışta 0 kalır; pozitif sabit tutarda girilen tutar eklenir.` : "";
+  const ok = await appConfirm(`${category} kategorisindeki ${data.length} ürünün ${fieldLabel} için ${increaseLabel} uygulanacak.${warning}\n\nDevam edilsin mi?`, { title: "Toplu fiyat güncelleme", okText: "Güncelle" });
   if (!ok) return;
 
   const calc = (oldValue) => {

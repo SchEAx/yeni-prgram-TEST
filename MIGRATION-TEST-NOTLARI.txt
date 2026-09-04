@@ -71,3 +71,5 @@ v9.3: Loglar butonunu CSS safety-lock içinde gizleyen eski #nav-logs kuralı ka
 v10.1: Kategori Değerleri PostgreSQL /api/category-values üzerinden aktif edildi. Toplu fiyat güncelleme preview + confirm_count + transaction API akışına taşındı; yüzde artışta 0 fiyat 0 kalır, sabit artışta tutar eklenir.
 
 v10.1: Kategori Değerleri sekme hizası küçük ekranlarda ortalandı. Kategori tablosuna Ürünleri Düzenle eklendi; ürün bazlı Alış Fiyatı ve Ortalama Satış Fiyatı modal üzerinden PostgreSQL ürün PATCH API ile düzenlenebilir. İlk 100 sonuç gösterilir, aramayla daraltılır.
+
+v10.2: Toplu fiyat güncellemede sabit tutar için negatif değer desteklendi. Örn. -5000 girildiğinde seçili fiyatlardan 5000 TL düşer; sonuç 0 TL altına inemez. Yüzde modu şimdilik yalnızca pozitif artış kabul eder.

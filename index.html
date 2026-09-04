@@ -18,7 +18,7 @@
 </script>
 <link href="/logo.png" rel="apple-touch-icon"/>
 <link href="manifest.webmanifest" rel="manifest"/>
-<link href="style.css?v=10.1" rel="stylesheet"/>
+<link href="style.css?v=10.2" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -456,8 +456,8 @@ LED" rows="8"></textarea>
 <div class="form-grid category-price-update-grid">
 <div><label>Kategori *</label><select id="bulkPriceCategory"><option value="">Kategori seç</option></select></div>
 <div><label>Güncellenecek Fiyat *</label><select id="bulkPriceField"><option value="average_sale_price">Ortalama Satış Fiyatı</option><option value="purchase_price">Alış Fiyatı</option><option value="both">Alış + Satış Fiyatı</option></select></div>
-<div><label>Artış Türü *</label><select id="bulkPriceMode"><option value="percent">Yüzde (%)</option><option value="fixed">Sabit Tutar (₺)</option></select></div>
-<div><label>Artış Miktarı *</label><input id="bulkPriceAmount" min="0" step="0.01" type="number" placeholder="Örn: 10 veya 500"/></div>
+<div><label>Değişim Türü *</label><select id="bulkPriceMode"><option value="percent">Yüzde Artış (%)</option><option value="fixed">Sabit Tutar (+ / - ₺)</option></select></div>
+<div><label>Değişim Miktarı *</label><input id="bulkPriceAmount" step="0.01" type="number" placeholder="Örn: 10, 500 veya -5000"/></div>
 <div class="full category-price-update-actions">
 <button class="btn success" onclick="applyCategoryPriceUpdate()" type="button">Fiyatları Güncelle</button>
 <span class="muted" id="bulkPricePreview">Kategori ve tutar seçildiğinde işlem özeti burada görünür.</span>
@@ -777,7 +777,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=10.1"></script>
+<script src="js/core.js?v=10.2"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -786,11 +786,11 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=10.1"></script>
+<script src="js/navigation.js?v=10.2"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=10.1"></script>
-<script src="js/events.js?v=10.1"></script>
+<script src="js/migration-api.js?v=10.2"></script>
+<script src="js/events.js?v=10.2"></script>
 <script src="js/excel.js"></script>
-<script src="app.js?v=10.1"></script>
+<script src="app.js?v=10.2"></script>
 </body>
 </html>

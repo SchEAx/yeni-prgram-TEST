@@ -295,8 +295,22 @@ function migrationPriceFieldLabel(field) {
       : 'ortalama satış fiyatı';
 }
 
-function migrationPriceIncreaseLabel(mode, amount) {
-  return mode === 'percent' ? `%${amount}` : formatTL(amount);
+function migrationPriceAmountIsValid(mode, amount) {
+  if (!Number.isFinite(amount)) return false;
+  if (mode === 'fixed') return amount !== 0;
+  return amount > 0;
+}
+
+function migrationPriceChangeLabel(mode, amount) {
+  if (mode === 'percent') return `%${amount} artış`;
+  if (amount < 0) return `${formatTL(Math.abs(amount))} düşüş`;
+  return `${formatTL(amount)} artış`;
+}
+
+function migrationPriceChangeSentence(mode, amount) {
+  if (mode === 'percent') return `%${amount} artırılacak`;
+  if (amount < 0) return `${formatTL(Math.abs(amount))} düşürülecek`;
+  return `${formatTL(amount)} artırılacak`;
 }
 
 function migrationPricePreviewText(preview) {
@@ -326,7 +340,7 @@ function migrationPricePreviewText(preview) {
   const zeroNote = zeroCount
     ? ` · ${zeroCount} üründe seçili fiyatlardan en az biri 0`
     : '';
-  return `${count} ürün · ${migrationPriceFieldLabel(field)} ${migrationPriceIncreaseLabel(mode, amount)} · Stok değeri ${currentText} → ${nextText}${zeroNote}`;
+  return `${count} ürün · ${migrationPriceFieldLabel(field)} ${migrationPriceChangeLabel(mode, amount)} · Stok değeri ${currentText} → ${nextText}${zeroNote}`;
 }
 
 updateBulkPricePreview = async function() {
@@ -337,7 +351,7 @@ updateBulkPricePreview = async function() {
   }
 
   const body = migrationPriceRequestBody();
-  if (!body.category || !(body.amount > 0)) {
+  if (!body.category || !migrationPriceAmountIsValid(body.mode, body.amount)) {
     migrationLastPricePreview = null;
     el.bulkPricePreview.textContent = 'Kategori ve tutar seçildiğinde işlem özeti burada görünür.';
     return;
@@ -377,7 +391,14 @@ applyCategoryPriceUpdate = async function() {
 
   const body = migrationPriceRequestBody();
   if (!body.category) return showToast('Önce kategori seç', true);
-  if (!(body.amount > 0)) return showToast("Artış miktarı 0'dan büyük olmalı", true);
+  if (!migrationPriceAmountIsValid(body.mode, body.amount)) {
+    return showToast(
+      body.mode === 'fixed'
+        ? "Sabit değişim 0 olamaz. Düşürmek için örn. -5000 yazabilirsin."
+        : "Yüzde artış 0'dan büyük olmalı",
+      true
+    );
+  }
 
   try {
     setLoading(true);
@@ -396,9 +417,14 @@ applyCategoryPriceUpdate = async function() {
       : field === 'average_sale_price'
         ? Number(preview.zero_sale_count || 0)
         : Math.max(Number(preview.zero_purchase_count || 0), Number(preview.zero_sale_count || 0));
-    const zeroWarning = zeroCount
-      ? `\n\n${zeroCount} üründe seçili fiyatlardan en az biri 0. Yüzde artışta 0 kalır; sabit artışta tutar eklenir.`
-      : '';
+    let zeroWarning = '';
+    if (preview.mode === 'percent' && zeroCount) {
+      zeroWarning = `\n\n${zeroCount} üründe seçili fiyatlardan en az biri 0. Yüzde artışta 0 kalır.`;
+    } else if (preview.mode === 'fixed' && Number(preview.amount || 0) > 0 && zeroCount) {
+      zeroWarning = `\n\n${zeroCount} üründe seçili fiyatlardan en az biri 0. Sabit artışta girilen tutar eklenir.`;
+    } else if (preview.mode === 'fixed' && Number(preview.amount || 0) < 0) {
+      zeroWarning = `\n\n0 TL'nin altına düşecek fiyatlar otomatik olarak 0 TL'de durdurulur.`;
+    }
 
     const currentValue = field === 'purchase_price'
       ? formatTL(preview.current_purchase_value || 0)
@@ -412,7 +438,7 @@ applyCategoryPriceUpdate = async function() {
         : `${formatTL(preview.next_purchase_value || 0)} alış / ${formatTL(preview.next_sale_value || 0)} satış`;
 
     const ok = await appConfirm(
-      `${preview.category} kategorisindeki ${Number(preview.affected_products || 0)} ürünün ${migrationPriceFieldLabel(field)} ${migrationPriceIncreaseLabel(preview.mode, preview.amount)} artırılacak.\n\nStok değeri: ${currentValue} → ${nextValue}${zeroWarning}\n\nDevam edilsin mi?`,
+      `${preview.category} kategorisindeki ${Number(preview.affected_products || 0)} ürünün ${migrationPriceFieldLabel(field)} ${migrationPriceChangeSentence(preview.mode, Number(preview.amount || 0))}.\n\nStok değeri: ${currentValue} → ${nextValue}${zeroWarning}\n\nDevam edilsin mi?`,
       { title: 'Toplu fiyat güncelleme', okText: 'Güncelle' }
     );
     if (!ok) return;
@@ -441,7 +467,7 @@ applyCategoryPriceUpdate = async function() {
 window.applyCategoryPriceUpdate = applyCategoryPriceUpdate;
 
 
-// ---- v10.1 Kategori içinden ürün bazlı fiyat düzenleme ----
+// ---- v10.2 Kategori içinden ürün bazlı fiyat düzenleme + sabit fiyat düşürme ----
 let migrationCategoryPriceEditorCategory = '';
 let migrationCategoryPriceEditorRows = [];
 let migrationCategoryPriceEditorTimer = null;
