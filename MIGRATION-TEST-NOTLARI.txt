@@ -100,3 +100,14 @@ v12.1:
 - Uygula onayından sonra progress yeniden açılır.
 - Eski 45 / 100 gibi sahte aktarım sayacı kaldırıldı.
 - Progress artık gerçek Excel satır sayısını ve işlem aşamasını gösterir.
+
+v13.0:
+- PWA manifest baştan temizlendi; start_url/scope relative hale getirildi.
+- Gerçek 192x192, 512x512 ve Apple Touch ikonları üretildi.
+- Üst bara kalıcı "Güncelle" butonu eklendi; yeni sürüm yoksa "Uygulama güncel" bilgisi verir.
+- Tarayıcı PWA yüklemeyi desteklediğinde "Yükle" butonu görünür.
+- Service worker kaydı 9.2 sabitinden kurtarıldı ve v13 cache-bust kullanıyor.
+- version.json her zaman network/no-store kontrol edilir.
+- Güncelleme sırasında sadece garage-stock-* cache'leri temizlenir; başka service worker/cache'lere dokunulmaz.
+- Yeni sürüm kontrolü açılışta, dakikada bir, uygulamaya geri dönünce ve internet gelince çalışır.
+- Güncelleme bildirimi sağ altta kalır; kullanıcı "Güncelle" dediğinde yeni sürüm temiz cache ile açılır.

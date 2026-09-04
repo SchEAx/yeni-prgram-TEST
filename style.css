@@ -987,3 +987,38 @@ body::before{content:"MIGRATION TEST · PostgreSQL";position:fixed;left:12px;bot
 .migration-test-mode #page-add .excel-filter-summary{
   line-height:1.45;
 }
+
+
+/* === v13 PWA / Güncelleme cilası === */
+.update-check-btn{
+  background:linear-gradient(135deg,#0f766e,#059669);
+  box-shadow:0 8px 24px rgba(5,150,105,.18);
+}
+.update-check-btn:hover{filter:brightness(1.08)}
+.pwa-install-btn{
+  background:linear-gradient(135deg,#1d4ed8,#2563eb);
+  box-shadow:0 8px 24px rgba(37,99,235,.18);
+}
+.update-notice{
+  animation:updateNoticeIn .22s ease-out;
+}
+.update-notice::before{
+  content:"";
+  width:8px;
+  align-self:stretch;
+  border-radius:999px;
+  background:linear-gradient(180deg,#f59e0b,#22c55e);
+}
+.update-now-btn:hover{filter:brightness(1.08)}
+@keyframes updateNoticeIn{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@media(max-width:640px){
+  .top-actions #pwaInstallBtn,
+  .top-actions #checkUpdateBtn,
+  .top-actions #refreshBtn,
+  .top-actions #logoutBtn{
+    min-width:calc(50% - 5px);
+  }
+}

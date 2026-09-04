@@ -131,6 +131,9 @@ async function smartRefresh() {
   await loadAll();
 }
 if (el.refreshBtn) el.refreshBtn.addEventListener("click", smartRefresh);
+if (el.checkUpdateBtn) el.checkUpdateBtn.addEventListener("click", forceCheckAppUpdate);
+if (el.pwaInstallBtn) el.pwaInstallBtn.addEventListener("click", installPwaApp);
+
 if (el.enableNotifyBtn) el.enableNotifyBtn.addEventListener("click", enablePushNotifications);
 if (el.searchInput) el.searchInput.addEventListener("input", applySearch);
 if (el.movementSearchInput) el.movementSearchInput.addEventListener("input", renderMovementSearchResults);
@@ -167,7 +170,9 @@ if (el.historySearchInput) el.historySearchInput.addEventListener("keydown", (e)
   .filter(Boolean).forEach(select => select.addEventListener("change", updateExcelFilterSummary));
 if (el.categoryValueForm) el.categoryValueForm.addEventListener("submit", saveCategoryValueFromForm);
 initProductSuggestionInputs();
-if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js?v=9.2", { updateViaCache: "none" }).then(reg => reg.update()).catch(console.error)); }
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => registerPwaServiceWorker().catch(console.error));
+}
 async function bootApp() {
   const authenticated = await initAuthGate();
   if (authenticated && state.currentUser) {

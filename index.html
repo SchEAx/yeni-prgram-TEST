@@ -16,9 +16,12 @@
   }
 })();
 </script>
-<link href="/logo.png" rel="apple-touch-icon"/>
-<link href="manifest.webmanifest" rel="manifest"/>
-<link href="style.css?v=12.1" rel="stylesheet"/>
+<link href="./icons/apple-touch-icon.png" rel="apple-touch-icon"/>
+<meta content="yes" name="mobile-web-app-capable"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="Garage Stok" name="apple-mobile-web-app-title"/>
+<link href="manifest.webmanifest?v=13.0" rel="manifest"/>
+<link href="style.css?v=13.0" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -26,7 +29,7 @@
 <div class="login-overlay" id="loginOverlay">
 <div class="login-card">
 <div class="login-logo-row">
-<img alt="Logo" onerror="this.style.display='none'" src="/logo.png"/>
+<img alt="Logo" onerror="this.style.display='none'" src="./logo.png"/>
 <div>
 <h1>Stok Takip</h1>
 <p class="muted">Personel girişi</p>
@@ -45,7 +48,7 @@
 <div class="app-shell locked" id="appShell">
 <header class="topbar">
 <div class="brand-wrap">
-<img alt="Logo" class="app-logo" onerror="this.style.display='none'" src="/logo.png"/>
+<img alt="Logo" class="app-logo" onerror="this.style.display='none'" src="./logo.png"/>
 <div>
 <h1>Stok Takip</h1>
 <p class="muted">Sade stok giriş / çıkış sistemi</p>
@@ -55,6 +58,8 @@
 <div class="user-pill" id="activeUserPill">👤 <strong id="activeUserName">-</strong><span id="activeUserRole">-</span></div>
 
 
+<button class="btn pwa-install-btn hidden" id="pwaInstallBtn" type="button">📲 Yükle</button>
+<button class="btn update-check-btn" id="checkUpdateBtn" type="button" title="Yeni sürüm var mı kontrol et">⚡ Güncelle</button>
 <button class="btn secondary" id="refreshBtn">Yenile</button>
 <button class="btn danger" id="logoutBtn" type="button">Çıkış</button>
 </div>
@@ -785,7 +790,7 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=12.1"></script>
+<script src="js/core.js?v=13.0"></script>
 <script src="js/inventory.js"></script>
 <script src="js/sales-dashboard.js"></script>
 <script src="js/staff.js"></script>
@@ -794,12 +799,12 @@ LED" rows="8"></textarea>
 <script src="js/surveys.js"></script>
 <script src="js/management.js"></script>
 <script src="js/purchasing.js"></script>
-<script src="js/navigation.js?v=12.1"></script>
+<script src="js/navigation.js?v=13.0"></script>
 <script src="js/reports.js"></script>
-<script src="js/migration-api.js?v=12.1"></script>
-<script src="js/events.js?v=12.1"></script>
-<script src="js/excel.js?v=12.1"></script>
-<script src="js/migration-excel.js?v=12.1"></script>
-<script src="app.js?v=12.1"></script>
+<script src="js/migration-api.js?v=13.0"></script>
+<script src="js/events.js?v=13.0"></script>
+<script src="js/excel.js?v=13.0"></script>
+<script src="js/migration-excel.js?v=13.0"></script>
+<script src="app.js?v=13.0"></script>
 </body>
 </html>

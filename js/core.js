@@ -1,5 +1,5 @@
 // Core: yapılandırma, state, DOM, yetkiler, bildirimler ve ortak yardımcılar
-const APP_VERSION = '3.13.1-migration-test-jwt-12.1';
+const APP_VERSION = '3.13.1-migration-test-jwt-13.0';
 let isOffline = !navigator.onLine;
 let globalLoading = false;
 
@@ -39,7 +39,7 @@ originalTitle: document.title,
 
 const el = {
   totalProductCount: document.getElementById("totalProductCount"), totalStockCount: document.getElementById("totalStockCount"), reservedStockCount: document.getElementById("reservedStockCount"), criticalStockCount: document.getElementById("criticalStockCount"),
-  refreshBtn: document.getElementById("refreshBtn"), enableNotifyBtn: document.getElementById("enableNotifyBtn"), productForm: document.getElementById("productForm"), productId: document.getElementById("productId"), barcode: document.getElementById("barcode"),
+  refreshBtn: document.getElementById("refreshBtn"), checkUpdateBtn: document.getElementById("checkUpdateBtn"), pwaInstallBtn: document.getElementById("pwaInstallBtn"), enableNotifyBtn: document.getElementById("enableNotifyBtn"), productForm: document.getElementById("productForm"), productId: document.getElementById("productId"), barcode: document.getElementById("barcode"),
   productBrand: document.getElementById("productBrand"), category: document.getElementById("category"), carBrand: document.getElementById("carBrand"), carModel: document.getElementById("carModel"), carType: document.getElementById("carType"), vehicleYear: document.getElementById("vehicleYear"), stock: document.getElementById("stock"), minStock: document.getElementById("minStock"), location: document.getElementById("location"), note: document.getElementById("note"),
   saveProductBtn: document.getElementById("saveProductBtn"), clearProductBtn: document.getElementById("clearProductBtn"), movementSearchInput: document.getElementById("movementSearchInput"), movementSearchList: document.getElementById("movementSearchList"), searchInput: document.getElementById("searchInput"), productTableBody: document.getElementById("productTableBody"), movementList: document.getElementById("movementList"),
   stockRequestsBox: document.getElementById("stockRequestsBox"), reservationPanel: document.getElementById("reservationPanel"), requestedTextBox: document.getElementById("requestedTextBox"), productSearchInput: document.getElementById("productSearchInput"), productMatchBox: document.getElementById("productMatchBox"), toast: document.getElementById("toast"),

@@ -101,59 +101,266 @@ async function changeOwnPassword() {
 }
 window.changeOwnPassword = changeOwnPassword;
 
-function showUpdateNotice(newVersion) {
-  document.querySelectorAll(".update-notice").forEach((node, index) => { if (index > 0) node.remove(); });
-  let notice = document.getElementById("updateNotice");
-  if (notice) {
-    notice.querySelector(".update-notice-text span")?.replaceChildren(document.createTextNode(String(newVersion || "")));
+const PWA_BUILD_VERSION = "v3.13.1-MIGRATION-TEST-JWT-13.0";
+let deferredPwaInstallPrompt = null;
+let pwaUpdateCheckRunning = false;
+
+function isStandalonePwa() {
+  return (
+    window.matchMedia?.("(display-mode: standalone)")?.matches
+    || window.navigator.standalone === true
+  );
+}
+
+function setPwaInstallButtonVisible(visible) {
+  const button = document.getElementById("pwaInstallBtn");
+  if (!button) return;
+  button.classList.toggle("hidden", !visible || isStandalonePwa());
+}
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredPwaInstallPrompt = event;
+  setPwaInstallButtonVisible(true);
+});
+
+window.addEventListener("appinstalled", () => {
+  deferredPwaInstallPrompt = null;
+  setPwaInstallButtonVisible(false);
+  showToast("Garage Stok cihaza yüklendi ✅");
+});
+
+async function installPwaApp() {
+  if (isStandalonePwa()) {
+    showToast("Uygulama zaten yüklü ✅");
     return;
   }
-  notice = document.createElement("div");
-  notice.id = "updateNotice"; notice.className = "update-notice";
-  notice.innerHTML = `<div class="update-notice-text"><strong>⚡ Yeni sürüm hazır</strong><span>${escapeHtml(newVersion || "")}</span></div><button type="button" id="updateNowBtn" class="update-now-btn">Güncelle</button>`;
+
+  if (!deferredPwaInstallPrompt) {
+    showToast("Yükleme seçeneği şu an tarayıcı tarafından sunulmuyor.", true);
+    return;
+  }
+
+  const prompt = deferredPwaInstallPrompt;
+  deferredPwaInstallPrompt = null;
+  setPwaInstallButtonVisible(false);
+
+  await prompt.prompt();
+  const choice = await prompt.userChoice;
+
+  if (choice?.outcome === "accepted") {
+    showToast("Uygulama yükleniyor ✅");
+  } else {
+    showToast("Yükleme iptal edildi");
+  }
+}
+window.installPwaApp = installPwaApp;
+
+async function clearGarageStockCaches() {
+  if (!("caches" in window)) return;
+  const keys = await caches.keys();
+  await Promise.all(
+    keys
+      .filter(key => key.startsWith("garage-stock-"))
+      .map(key => caches.delete(key))
+  );
+}
+
+async function unregisterGarageStockWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  const registrations = await navigator.serviceWorker.getRegistrations();
+
+  await Promise.all(
+    registrations.map(async reg => {
+      const scriptUrl =
+        reg.active?.scriptURL
+        || reg.waiting?.scriptURL
+        || reg.installing?.scriptURL
+        || "";
+
+      if (
+        scriptUrl.includes("/sw.js")
+        || scriptUrl.endsWith("sw.js")
+      ) {
+        await reg.unregister();
+      }
+    })
+  );
+}
+
+async function registerPwaServiceWorker() {
+  if (!("serviceWorker" in navigator)) return null;
+
+  const registration = await navigator.serviceWorker.register(
+    "./sw.js?v=13.0",
+    { updateViaCache: "none" }
+  );
+
+  try {
+    await registration.update();
+  } catch (err) {
+    console.warn("Service worker update kontrolü yapılamadı:", err);
+  }
+
+  return registration;
+}
+window.registerPwaServiceWorker = registerPwaServiceWorker;
+
+function showUpdateNotice(newVersion) {
+  let notice = document.getElementById("updateNotice");
+
+  if (!notice) {
+    notice = document.createElement("div");
+    notice.id = "updateNotice";
+    notice.className = "update-notice";
+    document.body.appendChild(notice);
+  }
+
+  notice.classList.remove("is-updating");
+  notice.innerHTML = `
+    <div class="update-notice-text">
+      <strong>⚡ Yeni sürüm hazır</strong>
+      <span>${escapeHtml(newVersion || "")}</span>
+    </div>
+    <button type="button" id="updateNowBtn" class="update-now-btn">Güncelle</button>
+  `;
+
   let updateStarted = false;
+
   const runUpdate = async (event) => {
-    event?.preventDefault(); event?.stopPropagation();
-    if (updateStarted) return; updateStarted = true;
-    notice.classList.add("is-updating"); notice.innerHTML = `<strong>⚡ Güncelleniyor...</strong>`;
+    event?.preventDefault();
+    event?.stopPropagation();
+
+    if (updateStarted) return;
+    updateStarted = true;
+
+    notice.classList.add("is-updating");
+    notice.innerHTML = `
+      <div class="update-notice-text">
+        <strong>⚡ Güncelleniyor...</strong>
+        <span>Önbellek temizleniyor ve yeni sürüm hazırlanıyor.</span>
+      </div>
+    `;
+
     try {
-      if ("caches" in window) await Promise.all((await caches.keys()).map(key => caches.delete(key)));
-      if ("serviceWorker" in navigator) await Promise.all((await navigator.serviceWorker.getRegistrations()).map(reg => reg.unregister()));
-      localStorage.setItem("stok_app_version", String(newVersion || Date.now()));
-    } catch (err) { console.warn("Güncelleme temizliği yapılamadı:", err); }
-    window.location.replace(window.location.pathname + "?v=" + encodeURIComponent(newVersion || Date.now()));
+      await clearGarageStockCaches();
+      await unregisterGarageStockWorker();
+      localStorage.setItem("stok_app_version", String(newVersion || PWA_BUILD_VERSION));
+    } catch (err) {
+      console.warn("Güncelleme temizliği yapılamadı:", err);
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("v", String(newVersion || Date.now()));
+    url.searchParams.set("_update", String(Date.now()));
+    window.location.replace(url.toString());
   };
-  notice.querySelector("#updateNowBtn")?.addEventListener("click", runUpdate, { once: true });
-  document.body.appendChild(notice);
+
+  notice.querySelector("#updateNowBtn")
+    ?.addEventListener("click", runUpdate, { once: true });
+
   showToast("Yeni sürüm mevcut ⚡ Güncelle butonuna basabilirsin.");
 }
-async function checkAppVersion() {
+
+async function fetchRemoteAppVersion() {
+  const response = await fetch(
+    "./version.json?_=" + Date.now(),
+    {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Sürüm dosyası alınamadı (${response.status})`);
+  }
+
+  const data = await response.json();
+  return String(data.version || "").trim();
+}
+
+async function checkAppVersion({ silent = true } = {}) {
+  if (pwaUpdateCheckRunning) return false;
+  pwaUpdateCheckRunning = true;
+
   try {
-    const res = await fetch("./version.json?_=" + Date.now(), { cache: "no-store" });
-    if (!res.ok) return;
+    const remoteVersion = await fetchRemoteAppVersion();
+    if (!remoteVersion) return false;
 
-    const data = await res.json();
-    const remoteVersion = String(data.version || "").trim();
-    if (!remoteVersion) return;
+    localStorage.setItem("stok_app_remote_version", remoteVersion);
 
-    const localVersion = localStorage.getItem("stok_app_version");
-
-    if (!localVersion) {
-      localStorage.setItem("stok_app_version", remoteVersion);
-      return;
-    }
-
-    if (localVersion !== remoteVersion) {
+    if (remoteVersion !== PWA_BUILD_VERSION) {
       showUpdateNotice(remoteVersion);
+      return true;
     }
+
+    document.getElementById("updateNotice")?.remove();
+    localStorage.setItem("stok_app_version", PWA_BUILD_VERSION);
+
+    if (!silent) {
+      showToast(`Uygulama güncel ✅ ${PWA_BUILD_VERSION}`);
+    }
+
+    return false;
+
   } catch (err) {
     console.warn("Sürüm kontrolü yapılamadı:", err);
+
+    if (!silent) {
+      showToast("Güncelleme kontrolü yapılamadı", true);
+    }
+
+    return false;
+
+  } finally {
+    pwaUpdateCheckRunning = false;
   }
 }
 
+async function forceCheckAppUpdate() {
+  const button = document.getElementById("checkUpdateBtn");
+  const oldText = button?.textContent;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Kontrol...";
+  }
+
+  try {
+    const registration = await registerPwaServiceWorker().catch(() => null);
+
+    if (registration?.waiting) {
+      registration.waiting.postMessage({ type: "SKIP_WAITING" });
+    }
+
+    await checkAppVersion({ silent: false });
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = oldText || "⚡ Güncelle";
+    }
+  }
+}
+window.forceCheckAppUpdate = forceCheckAppUpdate;
+
 function initUpdateChecker() {
-  checkAppVersion();
-  setInterval(checkAppVersion, 60 * 1000);
+  checkAppVersion({ silent: true });
+
+  window.setInterval(
+    () => checkAppVersion({ silent: true }),
+    60 * 1000
+  );
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      checkAppVersion({ silent: true });
+    }
+  });
+
+  window.addEventListener("online", () => {
+    checkAppVersion({ silent: true });
+  });
 }
 
 function playNotifySound() { try { const AudioContext = window.AudioContext || window.webkitAudioContext; const ctx = new AudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = "sine"; osc.frequency.value = 880; gain.gain.setValueAtTime(0.001, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + 0.03); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.5); } catch (e) { console.warn("Ses çalınamadı", e); } }
