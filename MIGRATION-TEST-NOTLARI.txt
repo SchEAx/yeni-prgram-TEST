@@ -27,3 +27,9 @@ JWT-3: Kritik Stok PostgreSQL /api/stock/critical üzerinden açıldı. 715 krit
 - v4.2: Sipariş Önerisi menü görünürlüğü düzeltildi; migration güvenlik CSS kilidinden çıkarıldı.
 
 - v5.0: Ürün Ekle/Düzenle güvenli PostgreSQL CRUD API'ye taşındı. Admin silme API güvenlik kontrolleriyle açıldı. Kamera/Galeri görselleri /api/products/:id/image üzerinden sunucudaki migration-test uploads alanına gider. Eski Supabase Storage görselleri testte gösterilmez. Excel yükleme/indirme paneli migration testte kapalı tutulur.
+
+
+v6.0:
+- Talepler sekmesi PostgreSQL/JWT API ile açıldı.
+- Ürün eşleştirme, rezervasyon ve rezerv iptali API üzerinden çalışır.
+- Talep rezervleri panelde listelenir.

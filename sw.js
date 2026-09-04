@@ -1,4 +1,4 @@
-const CACHE_NAME = "garage-stock-v3-13-1-migration-test-jwt-5-0";
+const CACHE_NAME = "garage-stock-v3-13-1-migration-test-jwt-6-0";
 const ASSETS = [
   "./",
   "./index.html",

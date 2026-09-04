@@ -64,6 +64,7 @@
 
 
 <button id="nav-add" onclick="switchTab('add')">Ürün Ekle</button>
+<button id="nav-requests" onclick="switchTab('requests')">Talepler <span id="requestNavBadge" class="nav-count hidden">0</span></button>
 <button id="nav-movements" onclick="switchTab('movements')">Hareketler</button>
 <button id="nav-critical" onclick="switchTab('critical')">Kritik Stok</button>
 <button id="nav-categoryValues" onclick="switchTab('categoryValues')">Kategori Değerleri</button>
@@ -119,6 +120,39 @@
 </div>
 </section>
 </div>
+
+<div class="page hidden" id="page-requests">
+<section class="grid-2 request-page-grid">
+  <div class="card">
+    <div class="section-head">
+      <div><h2>Depo Talepleri</h2><p class="muted">Araç kabulden gelen talepleri görüntüle, stoktan ürün eşleştir ve rezerve et.</p></div>
+      <button class="btn secondary" type="button" onclick="loadStockRequests()">Yenile</button>
+    </div>
+    <div class="request-filter-row">
+      <button class="btn secondary" type="button" onclick="setRequestFilter('active')">Aktif</button>
+      <button class="btn ghost" type="button" onclick="setRequestFilter('bekliyor')">Bekliyor</button>
+      <button class="btn ghost" type="button" onclick="setRequestFilter('rezerve_edildi')">Rezerve</button>
+      <button class="btn ghost" type="button" onclick="setRequestFilter('montaj_bitti')">Tamamlanan</button>
+      <button class="btn ghost" type="button" onclick="setRequestFilter('all')">Tümü</button>
+    </div>
+    <div class="movement-list" id="stockRequestsBox"><div class="empty-state">Talepler yükleniyor...</div></div>
+  </div>
+  <div class="card hidden" id="reservationPanel">
+    <div class="section-head">
+      <div><h2>Ürün Eşleştir / Rezerve Et</h2><p class="muted">Talep için uygun ürünü ara ve kullanılabilir stoktan ayır.</p></div>
+      <button class="btn ghost" type="button" onclick="closeReservationPanel()">Kapat</button>
+    </div>
+    <div class="request-detail" id="requestedTextBox">Talep seçilmedi</div>
+    <div class="request-reservation-box">
+      <div class="section-head compact"><div><strong>Bu talepte rezerve edilenler</strong></div></div>
+      <div class="movement-list" id="requestReservationList"><div class="empty-state">Rezervasyon yok</div></div>
+    </div>
+    <div style="margin-top:16px;"><label>Stokta Ürün Ara</label><input autocomplete="off" id="productSearchInput" placeholder="Ürün, kategori, araç modeli, barkod..." type="text"/></div>
+    <div class="movement-search-list" id="productMatchBox"><div class="empty-state">Talep seçildiğinde uygun ürünler burada görünür</div></div>
+  </div>
+</section>
+</div>
+
 <div class="page hidden" id="page-purchaseOrders">
 <section class="grid-2 purchase-order-grid">
   <div class="card">

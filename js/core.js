@@ -1,5 +1,5 @@
 // Core: yapılandırma, state, DOM, yetkiler, bildirimler ve ortak yardımcılar
-const APP_VERSION = '3.13.1-migration-test-jwt-4';
+const APP_VERSION = '3.13.1-migration-test-jwt-6';
 let isOffline = !navigator.onLine;
 let globalLoading = false;
 
@@ -191,6 +191,7 @@ const ROLE_PERMISSION_STORE_KEY = "garage_role_permissions_v1";
 const TAB_DEFINITIONS = [
   { key: "operation", label: "İşlem" },
   { key: "add", label: "Ürün Ekle" },
+  { key: "requests", label: "Talepler" },
   { key: "movements", label: "Hareketler" },
   { key: "critical", label: "Kritik Stok" },
   { key: "categoryValues", label: "Kategori Değerleri" },
