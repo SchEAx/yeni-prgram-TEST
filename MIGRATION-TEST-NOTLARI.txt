@@ -51,3 +51,10 @@ v8.0:
 - Kendi Admin hesabını pasifleştirme/rol düşürme backend tarafından engellenir.
 - Personel fiziksel silme ve toplu sıfırlama migration testte kapalıdır.
 - Ayarlar sekmesi tema/yerel görünüm için açıldı; Supabase yazma kullanılmaz.
+
+
+=== v9.0 ===
+- Loglar PostgreSQL API'ye taşındı.
+- POST /api/activity-logs ile log sahibi JWT'den yazılır.
+- GET /api/activity-logs ile Admin son kayıtları okur.
+- API log hatası ana stok işlemini bozmasın diye yerel fallback korunur.

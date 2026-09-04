@@ -167,21 +167,65 @@ window.logoutCurrentUser = async function() {
 };
 logoutCurrentUser = window.logoutCurrentUser;
 
-// ---- Yerel log: test paketi Supabase'e log yazmaz ----
+// ---- Aktivite logları (PostgreSQL API) ----
+// Log sahibini frontend belirlemez; backend JWT'deki kullanıcıyı yazar.
+// Log servisinde geçici sorun olursa ana işlem bozulmasın diye yerel fallback tutulur.
 logActivity = async function(action, description, entity_table = null, entity_id = null) {
-  const staff = currentStaff();
-  const item = {
-    id: "local_" + Date.now() + "_" + Math.random().toString(16).slice(2),
-    actor_name: staff.name, actor_role: staff.role, action, description, entity_table,
-    entity_id: entity_id ? String(entity_id) : null, created_at: new Date().toISOString()
-  };
-  localActivityPush(item);
-  state.activityLogs = [item, ...(state.activityLogs || [])].slice(0, 120);
-  renderActivityLogs();
+  const fallbackStaff = currentStaff();
+  try {
+    const payload = await apiFetch('/api/activity-logs', {
+      method: 'POST',
+      body: {
+        action,
+        description,
+        entity_table,
+        entity_id: entity_id == null ? null : String(entity_id)
+      }
+    });
+
+    const item = payload?.log;
+    if (item) {
+      localActivityPush(item);
+      state.activityLogs = [
+        item,
+        ...(state.activityLogs || []).filter(x => String(x.id) !== String(item.id))
+      ].slice(0, 120);
+      renderActivityLogs();
+      if (typeof renderUsersList === 'function') renderUsersList();
+      if (typeof renderRolePermissionEditor === 'function') renderRolePermissionEditor();
+    }
+    return item || null;
+  } catch (err) {
+    console.warn('Aktivite logu API\'ye yazılamadı; yerel fallback kullanılıyor:', err?.message || err);
+    const item = {
+      id: 'local_' + Date.now() + '_' + Math.random().toString(16).slice(2),
+      actor_name: fallbackStaff.name,
+      actor_role: fallbackStaff.role,
+      action,
+      description,
+      entity_table,
+      entity_id: entity_id == null ? null : String(entity_id),
+      created_at: new Date().toISOString()
+    };
+    localActivityPush(item);
+    state.activityLogs = [item, ...(state.activityLogs || [])].slice(0, 120);
+    renderActivityLogs();
+    return item;
+  }
 };
+
 loadActivityLogs = async function() {
-  state.activityLogs = readLocalActivityLogs();
-  renderActivityLogs();
+  try {
+    const payload = await apiFetch('/api/activity-logs?limit=120');
+    state.activityLogs = Array.isArray(payload?.logs) ? payload.logs : [];
+    renderActivityLogs();
+    return state.activityLogs;
+  } catch (err) {
+    console.warn('Aktivite logları API\'den alınamadı; yerel kayıtlar gösteriliyor:', err?.message || err);
+    state.activityLogs = readLocalActivityLogs();
+    renderActivityLogs();
+    return state.activityLogs;
+  }
 };
 window.loadActivityLogs = loadActivityLogs;
 
