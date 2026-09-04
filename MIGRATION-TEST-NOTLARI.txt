@@ -58,3 +58,6 @@ v8.0:
 - POST /api/activity-logs ile log sahibi JWT'den yazılır.
 - GET /api/activity-logs ile Admin son kayıtları okur.
 - API log hatası ana stok işlemini bozmasın diye yerel fallback korunur.
+
+
+v9.1 hotfix: Loglar sekmesi MIGRATION_ALLOWED_TABS listesine eklendi.
