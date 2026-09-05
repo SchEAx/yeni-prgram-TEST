@@ -179,3 +179,10 @@ v15.4:
 - Anket tablosunda İşlem/Sil sütunu ID yanına taşındı.
 - ID + İşlem sütunları yatay kaydırmada sabit kalır.
 - Admin tespiti JWT state.currentUser rolünü öncelikli kullanır.
+
+
+v15.5:
+- Ayarlar > Hesabım ve Şifre artık Supabase Auth kullanmaz.
+- POST /api/auth/change-password ile mevcut şifre bcrypt compare edilir.
+- Yeni şifre bcrypt hash olarak app_users.password_hash alanına yazılır.
+- Başarılı değişiklik sonrası mevcut oturum kapatılır ve yeni şifreyle giriş istenir.

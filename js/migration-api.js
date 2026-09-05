@@ -1042,10 +1042,7 @@ window.quickStockAction = async function(id, type, fixedQty = null) {
   } finally { setLoading(false); }
 };
 
-changeOwnPassword = async function() {
-  showToast("Migration test: Şifre değiştirme henüz taşınmadı", true);
-};
-window.changeOwnPassword = changeOwnPassword;
+// v15.5: Şifre değiştirme navigation.js içinden PostgreSQL API kullanır.
 
 
 // ---- Sipariş Önerisi (PostgreSQL API) ----

@@ -83,38 +83,64 @@ async function changeOwnPassword() {
   const newInput = document.getElementById("newPasswordInput");
   const repeatInput = document.getElementById("repeatPasswordInput");
   const button = document.getElementById("changePasswordBtn");
+
   const currentPassword = String(currentInput?.value || "");
   const newPassword = String(newInput?.value || "");
   const repeatPassword = String(repeatInput?.value || "");
 
-  if (!currentPassword || !newPassword || !repeatPassword) return showToast("Şifre alanlarının tamamını doldur", true);
-  if (newPassword.length < 6) return showToast("Yeni şifre en az 6 karakter olmalı", true);
-  if (newPassword !== repeatPassword) return showToast("Yeni şifreler aynı değil", true);
-  if (currentPassword === newPassword) return showToast("Yeni şifre mevcut şifreden farklı olmalı", true);
+  if (!currentPassword || !newPassword || !repeatPassword) {
+    return showToast("Şifre alanlarının tamamını doldur", true);
+  }
+  if (newPassword.length < 6) {
+    return showToast("Yeni şifre en az 6 karakter olmalı", true);
+  }
+  if (newPassword.length > 128) {
+    return showToast("Yeni şifre çok uzun", true);
+  }
+  if (newPassword !== repeatPassword) {
+    return showToast("Yeni şifreler aynı değil", true);
+  }
+  if (currentPassword === newPassword) {
+    return showToast("Yeni şifre mevcut şifreden farklı olmalı", true);
+  }
 
   try {
     if (button) button.disabled = true;
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser();
-    if (userError) throw userError;
-    const email = userData?.user?.email;
-    if (!email) throw new Error("Oturum bilgisi alınamadı");
+    setLoading(true);
 
-    const { error: verifyError } = await supabaseClient.auth.signInWithPassword({ email, password: currentPassword });
-    if (verifyError) throw new Error("Mevcut şifre yanlış");
-
-    const { error: updateError } = await supabaseClient.auth.updateUser({ password: newPassword });
-    if (updateError) throw updateError;
+    await apiFetch("/api/auth/change-password", {
+      method: "POST",
+      body: {
+        current_password: currentPassword,
+        new_password: newPassword
+      }
+    });
 
     if (currentInput) currentInput.value = "";
     if (newInput) newInput.value = "";
     if (repeatInput) repeatInput.value = "";
-    await logActivity("password_change", "Kullanıcı kendi şifresini değiştirdi", "auth.users", state.currentUser?.authUserId || null);
-    showToast("Şifre güncellendi. Yeni şifrenle tekrar giriş yap");
-    setTimeout(() => logoutCurrentStaff(), 900);
+
+    await logActivity(
+      "password_change",
+      "Kullanıcı kendi GarageFlow şifresini değiştirdi",
+      "app_users",
+      null
+    ).catch(() => {});
+
+    showToast("Şifre güncellendi ✅ Yeni şifrenle tekrar giriş yap");
+
+    setTimeout(() => {
+      logoutCurrentUser().catch(() => {
+        setMigrationToken("");
+        state.currentUser = null;
+        showLogin();
+      });
+    }, 900);
   } catch (err) {
     console.error(err);
-    showToast(err.message || "Şifre değiştirilemedi", true);
+    showToast(err?.message || "Şifre değiştirilemedi", true);
   } finally {
+    setLoading(false);
     if (button) button.disabled = false;
   }
 }
