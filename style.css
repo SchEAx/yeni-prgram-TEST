@@ -1856,3 +1856,89 @@ body::before{
   color:var(--text)!important;
   border-color:var(--border)!important;
 }
+
+
+/* ==========================================================
+   GarageFlow v15.6 - Mobil / Tablet Header & Nav düzeltmesi
+   - 641-1079px: header tekrar kompakt yatay düzene geçer.
+   - Telefon: aksiyonlar 2 kolon, Çıkış tam satır.
+   - Kategori Değerleri eski width:100% zorlamasından kurtarılır.
+   - Mobilde üst Migration rozeti header'ın üstünü kapatmaz.
+   ========================================================== */
+@media (min-width:641px) and (max-width:1079px){
+  .topbar{
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:12px!important;
+  }
+
+  .brand-wrap{
+    flex:1 1 auto!important;
+    min-width:0!important;
+  }
+
+  .top-actions{
+    flex:0 1 auto!important;
+    width:auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    flex-wrap:wrap!important;
+    gap:7px!important;
+  }
+
+  .top-actions .btn{
+    width:auto!important;
+    min-width:82px!important;
+    padding:9px 12px!important;
+  }
+
+  .top-actions .user-pill{
+    width:auto!important;
+    min-width:0!important;
+  }
+}
+
+@media (max-width:640px){
+  .topbar{
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:10px!important;
+  }
+
+  .top-actions{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+
+  .top-actions .user-pill{
+    grid-column:1 / -1!important;
+    width:100%!important;
+    justify-content:flex-start!important;
+  }
+
+  .top-actions .btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  #logoutBtn{
+    grid-column:1 / -1!important;
+  }
+}
+
+@media (max-width:1079px){
+  .migration-test-mode #nav-categoryValues:not(.hidden){
+    width:auto!important;
+    max-width:none!important;
+    flex:0 0 auto!important;
+    justify-self:auto!important;
+  }
+
+  .powered-badge{
+    display:none!important;
+  }
+}

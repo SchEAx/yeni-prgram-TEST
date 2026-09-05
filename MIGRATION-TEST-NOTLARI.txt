@@ -186,3 +186,12 @@ v15.5:
 - POST /api/auth/change-password ile mevcut şifre bcrypt compare edilir.
 - Yeni şifre bcrypt hash olarak app_users.password_hash alanına yazılır.
 - Başarılı değişiklik sonrası mevcut oturum kapatılır ve yeni şifreyle giriş istenir.
+
+
+v15.6:
+- Mobil/tablet GarageFlow header yeniden kompakt hale getirildi.
+- 641-1079 px aralığında header yatay, aksiyonlar kompakt.
+- Telefonlarda aksiyonlar 2 kolon; Çıkış tam satır.
+- Kategori Değerleri sekmesindeki width:100% mobil taşma hatası düzeltildi.
+- Mobilde üst Migration rozeti header üstünü kapatmasın diye gizlendi.
+- Kullanıcının kendi şifresini değiştirmesinde minimum uzunluk tekrar 4 karakter yapıldı.

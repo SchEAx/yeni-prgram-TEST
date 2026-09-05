@@ -91,8 +91,8 @@ async function changeOwnPassword() {
   if (!currentPassword || !newPassword || !repeatPassword) {
     return showToast("Şifre alanlarının tamamını doldur", true);
   }
-  if (newPassword.length < 6) {
-    return showToast("Yeni şifre en az 6 karakter olmalı", true);
+  if (newPassword.length < 4) {
+    return showToast("Yeni şifre en az 4 karakter olmalı", true);
   }
   if (newPassword.length > 128) {
     return showToast("Yeni şifre çok uzun", true);
