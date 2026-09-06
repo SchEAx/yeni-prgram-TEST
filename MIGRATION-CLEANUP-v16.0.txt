@@ -1,0 +1,8 @@
+GarageFlow v16.0
+
+Update-loop hard fix:
+- Runtime/remote sürüm normalize edilir.
+- Güncelle butonu cache ve eski workerları temizler.
+- Yeni index.html cache:no-store ile doğrudan fetch edilir ve document'e yazılır.
+- Service worker cache-first yerine network-first çalışır.
+- Bildirim artık Çalışan / Sunucu sürümünü gösterir.

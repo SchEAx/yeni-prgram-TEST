@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>GarageFlow Güncelleme Temizliği</title>
+  <style>
+    html,body{margin:0;min-height:100%;background:#07101d;color:#fff;font-family:Arial,sans-serif}
+    body{display:grid;place-items:center;min-height:100vh;padding:20px;box-sizing:border-box}
+    .box{max-width:560px;width:100%;padding:24px;border-radius:18px;background:#111827;border:1px solid rgba(255,255,255,.12);box-shadow:0 20px 50px rgba(0,0,0,.35)}
+    h1{margin:0 0 10px;font-size:22px}p{color:#cbd5e1;line-height:1.5}.ok{color:#86efac;font-weight:700}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>GarageFlow temiz güncelleme</h1>
+    <p id="status">Eski cache ve Service Worker temizleniyor…</p>
+  </div>
+<script>
+(async () => {
+  const status = document.getElementById('status');
+  try {
+    if ('caches' in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map(k => caches.delete(k)));
+    }
+    if ('serviceWorker' in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister().catch(() => false)));
+    }
+    try {
+      ['stok_app_version','stok_app_remote_version','stok_app_update_target','app_version']
+        .forEach(k => localStorage.removeItem(k));
+    } catch {}
+    status.className = 'ok';
+    status.textContent = 'Temizlendi. GarageFlow v16.0 açılıyor…';
+  } catch (err) {
+    status.textContent = 'Temizlik tamamlanamadı ama temiz sayfa deneniyor…';
+  }
+  const base = new URL('./', window.location.href);
+  base.searchParams.set('__garage_build','v3.13.1-MIGRATION-TEST-JWT-16.0');
+  base.searchParams.set('__garage_ts', String(Date.now()));
+  setTimeout(() => window.location.replace(base.toString()), 500);
+})();
+</script>
+</body>
+</html>

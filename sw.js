@@ -1,26 +1,26 @@
-const CACHE_NAME = "garage-stock-v3-13-1-migration-test-jwt-15-9";
+const CACHE_NAME = "garage-stock-v3-13-1-migration-test-jwt-16-0";
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=15.9",
-  "./js/core.js?v=15.9",
-  "./js/inventory.js?v=15.9",
-  "./js/sales-dashboard.js?v=15.9",
-  "./js/staff.js?v=15.9",
-  "./js/sales.js?v=15.9",
-  "./js/requests.js?v=15.9",
-  "./js/surveys.js?v=15.9",
-  "./js/management.js?v=15.9",
-  "./js/purchasing.js?v=15.9",
-  "./js/navigation.js?v=15.9",
-  "./js/reports.js?v=15.9",
-  "./js/migration-api.js?v=15.9",
-  "./js/events.js?v=15.9",
-  "./js/excel.js?v=15.9",
-  "./js/migration-excel.js?v=15.9",
-  "./app.js?v=15.9",
-  "./manifest.webmanifest?v=15.9",
+  "./style.css?v=16.0",
+  "./js/core.js?v=16.0",
+  "./js/inventory.js?v=16.0",
+  "./js/sales-dashboard.js?v=16.0",
+  "./js/staff.js?v=16.0",
+  "./js/sales.js?v=16.0",
+  "./js/requests.js?v=16.0",
+  "./js/surveys.js?v=16.0",
+  "./js/management.js?v=16.0",
+  "./js/purchasing.js?v=16.0",
+  "./js/navigation.js?v=16.0",
+  "./js/reports.js?v=16.0",
+  "./js/migration-api.js?v=16.0",
+  "./js/events.js?v=16.0",
+  "./js/excel.js?v=16.0",
+  "./js/migration-excel.js?v=16.0",
+  "./app.js?v=16.0",
+  "./manifest.webmanifest?v=16.0",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -72,70 +72,52 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
 
-  // API her zaman canlı ağdan.
-  if (url.hostname === "api.scheax.com.tr") {
-    event.respondWith(fetch(request));
-    return;
-  }
-
-  // Sürüm kontrolü cache'e asla takılmasın.
-  if (url.pathname.endsWith("/version.json")) {
-    event.respondWith(
-      fetch(request, { cache: "no-store" })
-    );
-    return;
-  }
-
-  // HTML: network-first, offline ise cache.
+  // API ve sürüm dosyası daima canlı ağdan.
   if (
-    request.mode === "navigate"
-    || request.headers.get("accept")?.includes("text/html")
+    url.hostname === "api.scheax.com.tr"
+    || url.pathname.endsWith("/version.json")
   ) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put("./index.html", clone))
-            .catch(() => {});
-
-          return response;
-        })
-        .catch(
-          () =>
-            caches.match("./index.html")
-            || caches.match("./")
-        )
-    );
+    event.respondWith(fetch(request, { cache: "no-store" }));
     return;
   }
 
-  // Statik dosyalar: bu sürümün cache'i, yoksa ağ.
+  // v16.0: Cache-first tamamen kaldırıldı.
+  // Ağ varsa her zaman yeni dosyayı kullan; cache sadece offline fallback.
   event.respondWith(
-    caches.match(request).then(async (cached) => {
-      if (cached) return cached;
+    fetch(request, { cache: "no-cache" })
+      .then((response) => {
+        if (
+          response
+          && response.ok
+          && url.origin === self.location.origin
+        ) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(request, clone))
+            .catch(() => {});
+        }
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
 
-      const response = await fetch(request);
+        if (
+          request.mode === "navigate"
+          || request.headers.get("accept")?.includes("text/html")
+        ) {
+          return (
+            await caches.match("./index.html")
+            || await caches.match("./")
+          );
+        }
 
-      if (
-        response
-        && response.ok
-        && url.origin === self.location.origin
-      ) {
-        const clone = response.clone();
-        caches.open(CACHE_NAME)
-          .then(cache => cache.put(request, clone))
-          .catch(() => {});
-      }
-
-      return response;
-    })
+        throw new Error("Offline ve cache kaydı yok");
+      })
   );
 });
 
