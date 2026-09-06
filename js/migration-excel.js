@@ -1,5 +1,5 @@
 // Garage İstanbul - Migration Test Excel API bridge v12.0
-// Bu dosya eski Supabase Excel fonksiyonlarını PostgreSQL API ile override eder.
+// Bu dosya eski eski veri katmanı Excel fonksiyonlarını PostgreSQL API ile override eder.
 
 state.migrationExcelFilterOptions = state.migrationExcelFilterOptions || {
   product_brands: [],

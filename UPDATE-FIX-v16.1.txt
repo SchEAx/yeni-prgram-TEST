@@ -1,0 +1,6 @@
+GarageFlow v16.1 update-loop fix
+
+- Eski v3.13.1 ön eki kaldırıldı. Gerçek uygulama sürümü artık yalnızca 16.1.
+- navigation.js yolu navigation-v16.1.js olarak değiştirildi. Bu, eski Service Worker/HTTP cache'in eski updater kodunu servis etmesini engeller.
+- Eski tam sürüm formatı görülürse normalize edilerek yalnızca son migration build numarası karşılaştırılır.
+- version.json, HTML meta, APP_VERSION, Service Worker cache ve asset query değerleri 16.1 ile eşleşir.

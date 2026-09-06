@@ -36,12 +36,12 @@
         .forEach(k => localStorage.removeItem(k));
     } catch {}
     status.className = 'ok';
-    status.textContent = 'Temizlendi. GarageFlow v16.0 açılıyor…';
+    status.textContent = 'Temizlendi. GarageFlow v16.1 açılıyor…';
   } catch (err) {
     status.textContent = 'Temizlik tamamlanamadı ama temiz sayfa deneniyor…';
   }
   const base = new URL('./', window.location.href);
-  base.searchParams.set('__garage_build','v3.13.1-MIGRATION-TEST-JWT-16.0');
+  base.searchParams.set('__garage_build','16.1');
   base.searchParams.set('__garage_ts', String(Date.now()));
   setTimeout(() => window.location.replace(base.toString()), 500);
 })();

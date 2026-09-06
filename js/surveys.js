@@ -40,7 +40,7 @@ async function deleteCustomerSurvey(id) {
     if (typeof apiFetch === "function" && typeof MIGRATION_TEST_MODE !== "undefined" && MIGRATION_TEST_MODE) {
       await apiFetch(`/api/customer-surveys/${encodeURIComponent(surveyId)}`, { method: "DELETE" });
     } else {
-      const { error } = await supabaseClient.from("customer_surveys").delete().eq("id", surveyId);
+      const { error } = await legacyDisabledClient.from("customer_surveys").delete().eq("id", surveyId);
       if (error) throw error;
     }
 
@@ -67,7 +67,7 @@ async function loadCustomerSurveyStats() {
       rows = Array.isArray(payload?.surveys) ? payload.surveys : [];
       totalSurveyCount = Number(payload?.count ?? rows.length);
     } else {
-      const { data, error } = await supabaseClient
+      const { data, error } = await legacyDisabledClient
         .from("customer_surveys")
         .select("*")
         .order("created_at", { ascending: false })

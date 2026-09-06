@@ -143,7 +143,7 @@ window.reserveProductForRequest = async function(productId) {
     setLoading(true);
     const requestId = state.selectedStockRequestId;
     const product = (state.products || []).find(p => String(p.id) === String(productId));
-    const { error } = await supabaseClient.rpc("reserve_stock_for_request", { p_request_id: requestId, p_product_id: productId, p_quantity: quantity, p_delivered_to: "" });
+    const { error } = await legacyDisabledClient.rpc("reserve_stock_for_request", { p_request_id: requestId, p_product_id: productId, p_quantity: quantity, p_delivered_to: "" });
     if (error) throw error;
     await logActivity("stock_reserve", `${product?.name || product?.category || "Ürün"} için ${quantity} adet rezerve edildi`, "stock_requests", requestId);
     showToast("Stok rezerve edildi ✅ Yeni ürün ekleyebilirsin.");
@@ -163,7 +163,7 @@ window.cancelReservation = async function(requestId) {
   if (!(await appConfirm("Bu rezervi iptal etmek istediğine emin misin?", { danger: true, okText: "Rezervi İptal Et" }))) return;
   try {
     setLoading(true);
-    const { error } = await supabaseClient.rpc("cancel_stock_reservation", { p_request_id: requestId });
+    const { error } = await legacyDisabledClient.rpc("cancel_stock_reservation", { p_request_id: requestId });
     if (error) throw error;
     await logActivity("stock_reservation_cancel", `Rezervasyon iptal edildi`, "stock_requests", requestId);
     showToast("Rezerv iptal edildi ✅");

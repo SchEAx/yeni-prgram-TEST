@@ -37,10 +37,10 @@ function setLoading(flag) { state.loading = flag; el.refreshBtn.disabled = flag;
 } el.refreshBtn.textContent = flag ? "Yükleniyor..." : "Yenile"; el.saveProductBtn.textContent = flag ? "Kaydediliyor..." : "Ürünü Kaydet"; }
 
 async function loadDashboardStats() {
-  // Önce Supabase SQL fonksiyonunu dener. Fonksiyon yoksa eski güvenli yönteme düşer.
+  // Önce eski veri katmanı SQL fonksiyonunu dener. Fonksiyon yoksa eski güvenli yönteme düşer.
   // Böylece SQL paketini çalıştırmadan da uygulama bozulmaz.
   try {
-    const { data, error } = await supabaseClient.rpc("stock_dashboard_stats");
+    const { data, error } = await legacyDisabledClient.rpc("stock_dashboard_stats");
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) throw new Error("Sayaç sonucu boş geldi");
@@ -55,7 +55,7 @@ async function loadDashboardStats() {
   }
 
   try {
-    const { count, error: countError } = await supabaseClient
+    const { count, error: countError } = await legacyDisabledClient
       .from("stock_products")
       .select("id", { count: "exact", head: true });
     if (countError) throw countError;
@@ -68,7 +68,7 @@ async function loadDashboardStats() {
 
     while (true) {
       const to = from + pageSize - 1;
-      const { data, error } = await supabaseClient
+      const { data, error } = await legacyDisabledClient
         .from("stock_products")
         .select("quantity,reserved_quantity,min_stock")
         .range(from, to);
@@ -108,7 +108,7 @@ async function loadOperationFilterOptions() {
   const pageSize = 1000;
   while (true) {
     const to = from + pageSize - 1;
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("stock_products")
       .select("category,vehicle_brand")
       .range(from, to);
@@ -132,7 +132,7 @@ async function loadProducts() {
   while (true) {
     const to = from + pageSize - 1;
 
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("stock_products")
       .select("*")
       .order("product_name", { ascending: true })
@@ -163,9 +163,9 @@ async function loadProducts() {
   if (state.activeTab === "management") renderCategoryBrandManagement();
   if (state.activeTab === "categoryValues") renderCategoryValues();
 }
-async function loadMovements() { const { data, error } = await supabaseClient.from("stock_movements").select("*, stock_products(product_name, barcode, category)").order("created_at", { ascending: false }).limit(300); if (error) throw error; state.movements = (data || []).filter(row => currentStaff().role === "admin" || canAccessCategory(row.stock_products?.category || "")); renderMovements(); if (typeof renderSaleDashboard === "function") renderSaleDashboard(); }
+async function loadMovements() { const { data, error } = await legacyDisabledClient.from("stock_movements").select("*, stock_products(product_name, barcode, category)").order("created_at", { ascending: false }).limit(300); if (error) throw error; state.movements = (data || []).filter(row => currentStaff().role === "admin" || canAccessCategory(row.stock_products?.category || "")); renderMovements(); if (typeof renderSaleDashboard === "function") renderSaleDashboard(); }
 async function loadStockRequests() {
-  const { data, error } = await supabaseClient.from("stock_requests").select("*").in("status", ["bekliyor", "rezerve_edildi", "teslim_edildi", "montaj_bitti", "iptal"]).order("created_at", { ascending: false }).limit(150);
+  const { data, error } = await legacyDisabledClient.from("stock_requests").select("*").in("status", ["bekliyor", "rezerve_edildi", "teslim_edildi", "montaj_bitti", "iptal"]).order("created_at", { ascending: false }).limit(150);
   if (error) { el.stockRequestsBox.innerHTML = `<div class="empty-state">Talep alınamadı: ${escapeHtml(error.message)}</div>`; return; }
   state.stockRequests = data || []; const todayTR = new Date().toLocaleDateString("tr-TR", {
   timeZone: "Europe/Istanbul"
@@ -440,9 +440,9 @@ window.assignBarcodeToStockGroup = async function(seedId) {
   let members = sourcePool.filter(p => groupedStockIdentityKey(p) === key);
 
   // Günlük işlem ekranında tüm ürünler state.products'a yüklenmemiş olabilir.
-  // Aynı kimlikteki diğer rafları Supabase'den de tamamla.
+  // Aynı kimlikteki diğer rafları eski veri katmanı'den de tamamla.
   try {
-    let groupQuery = supabaseClient.from("stock_products").select(STOCK_PRODUCT_SELECT).limit(500);
+    let groupQuery = legacyDisabledClient.from("stock_products").select(STOCK_PRODUCT_SELECT).limit(500);
     if (seed.category) groupQuery = groupQuery.eq("category", seed.category);
     if (seed.carBrand) groupQuery = groupQuery.eq("vehicle_brand", seed.carBrand);
     if (seed.carModel) groupQuery = groupQuery.eq("vehicle_model", seed.carModel);
@@ -477,7 +477,7 @@ Yeni barkod:`,
   );
   if (!conflict) {
     try {
-      const { data } = await supabaseClient
+      const { data } = await legacyDisabledClient
         .from("stock_products")
         .select(STOCK_PRODUCT_SELECT)
         .eq("barcode", cleanBarcode)
@@ -501,7 +501,7 @@ Konum ve stok adetleri ayrı kalacak. Devam edilsin mi?`, { okText: "Uygula" }))
     const ids = members.map(p => p.id);
     const chunkSize = 200;
     for (let i = 0; i < ids.length; i += chunkSize) {
-      const { error } = await supabaseClient.from("stock_products").update({ barcode: cleanBarcode }).in("id", ids.slice(i, i + chunkSize));
+      const { error } = await legacyDisabledClient.from("stock_products").update({ barcode: cleanBarcode }).in("id", ids.slice(i, i + chunkSize));
       if (error) throw error;
     }
     members.forEach(p => { p.barcode = cleanBarcode; });
@@ -617,7 +617,7 @@ function getOperationQty(productId) {
 function setOperationQty(productId, value) {
   const qty = Math.max(1, Number(value || 1));
   state.operationQty[productId] = qty;
-  // Miktar değişince Supabase'e tekrar sorgu atma; sadece mevcut kartları yeniden çiz.
+  // Miktar değişince eski veri katmanı'e tekrar sorgu atma; sadece mevcut kartları yeniden çiz.
   renderOperationCards(state.operationResults || []);
 }
 window.setOperationQty = setOperationQty;
@@ -717,7 +717,7 @@ function escapeIlikeValue(value) {
 }
 
 async function fetchOperationProductRows({ brand = "", category = "", token = "", limit = 600 } = {}) {
-  let query = supabaseClient
+  let query = legacyDisabledClient
     .from("stock_products")
     .select(STOCK_PRODUCT_SELECT)
     .order("product_name", { ascending: true })
@@ -750,9 +750,9 @@ async function searchStockProducts({ brand = "", category = "", search = "", lim
   const rawSearch = String(search || "").trim();
 
   // SQL paketindeki search_stock_products fonksiyonu varsa tek sorgu ile hızlı arar.
-  // Fonksiyon henüz kurulmadıysa catch içinde mevcut güvenli JS/Supabase arama mantığı devam eder.
+  // Fonksiyon henüz kurulmadıysa catch içinde mevcut güvenli JS/eski veri katmanı arama mantığı devam eder.
   try {
-    const { data, error } = await supabaseClient.rpc("search_stock_products", {
+    const { data, error } = await legacyDisabledClient.rpc("search_stock_products", {
       p_brand: brand || null,
       p_category: category || null,
       p_search: rawSearch || null,
@@ -766,7 +766,7 @@ async function searchStockProducts({ brand = "", category = "", search = "", lim
     if (needsFullPriceRows && rpcRows.length) {
       const ids = rpcRows.map(row => row.id).filter(Boolean);
       if (ids.length) {
-        const { data: fullRows, error: fullError } = await supabaseClient
+        const { data: fullRows, error: fullError } = await legacyDisabledClient
           .from("stock_products")
           .select(STOCK_PRODUCT_SELECT)
           .in("id", ids);
@@ -887,7 +887,7 @@ window.operationStockAction = async function(id, type) {
   try {
     setLoading(true);
 
-    const { data: newQuantity, error } = await supabaseClient.rpc("apply_manual_stock_movement", {
+    const { data: newQuantity, error } = await legacyDisabledClient.rpc("apply_manual_stock_movement", {
       p_product_id: id,
       p_direction: direction,
       p_quantity: Number(quantity),
@@ -937,7 +937,7 @@ window.setRequestFilter = function(status) { state.requestFilter = status; rende
 function clearProductForm() { [el.productId, el.barcode, el.productBrand, el.category, el.carBrand, el.carModel, el.carType, el.vehicleYear, el.stock, el.minStock, el.productPurchasePrice, el.productAverageSalePrice, el.location, el.note].filter(Boolean).forEach((x) => x.value = ""); resetProductImageState(); }
 function fillProductForm(product) { el.productId.value = product.id || ""; el.barcode.value = product.barcode || ""; el.productBrand.value = product.productBrand || ""; el.category.value = product.category || ""; el.carBrand.value = product.carBrand || ""; el.carModel.value = product.carModel || ""; el.carType.value = product.carType || ""; el.vehicleYear.value = product.vehicleYear || ""; el.stock.value = product.stock ?? ""; el.minStock.value = product.minStock ?? ""; if (el.productPurchasePrice) el.productPurchasePrice.value = product.purchasePrice || ""; if (el.productAverageSalePrice) el.productAverageSalePrice.value = product.averageSalePrice || ""; el.location.value = product.location || ""; productImageRemoveRequested = false; selectedProductImageBlob = null; if (el.productImageFile) el.productImageFile.value = ""; if (el.productCameraFile) el.productCameraFile.value = ""; if (el.productImage) el.productImage.value = product.imageUrl || ""; updateProductImagePreview(product.imageUrl || ""); el.note.value = product.note || ""; switchTab("add"); window.scrollTo({ top: 0, behavior: "smooth" }); }
 window.editProduct = function(id) { if (!requireRoleAction(["admin", "depo"], "Ürün düzenleme yetkisi sadece Admin/Depo")) return; const product = [...(state.operationResults || []), ...(state.movementResults || []), ...(state.products || [])].find((p) => String(p.id) === String(id)); if (!product) return showToast("Ürün bulunamadı", true); fillProductForm(product); };
-window.deleteProduct = async function(id) { if (!requireRoleAction(["admin"], "Ürün silme yetkisi sadece Admin")) return; const product = [...(state.operationResults || []), ...(state.movementResults || []), ...(state.products || [])].find((p) => String(p.id) === String(id)); if (!(await appConfirm("Bu ürünü silmek istediğine emin misin?", { danger: true, okText: "Sil" }))) return; try { setLoading(true); const { error } = await supabaseClient.from("stock_products").delete().eq("id", id); if (error) throw error; await logActivity("product_delete", `Ürün silindi: ${product?.name || id}`, "stock_products", id); state.products = (state.products || []).filter(p => String(p.id) !== String(id)); state.filteredProducts = (state.filteredProducts || []).filter(p => String(p.id) !== String(id)); state.operationResults = (state.operationResults || []).filter(p => String(p.id) !== String(id)); state.movementResults = (state.movementResults || []).filter(p => String(p.id) !== String(id)); if (el.productTableBody) renderProducts(); if (el.operationResultBox) renderOperationCards(state.operationResults || []); showToast("Ürün silindi"); state.operationFilterOptionsLoaded = false; await loadDashboardStats(); if (state.activeTab === "operation") { await queryOperationProducts(); await loadMovements(); } else { await loadMovements(); } } catch (err) { console.error(err); showToast(err.message || "Ürün silinemedi", true); } finally { setLoading(false); } };
+window.deleteProduct = async function(id) { if (!requireRoleAction(["admin"], "Ürün silme yetkisi sadece Admin")) return; const product = [...(state.operationResults || []), ...(state.movementResults || []), ...(state.products || [])].find((p) => String(p.id) === String(id)); if (!(await appConfirm("Bu ürünü silmek istediğine emin misin?", { danger: true, okText: "Sil" }))) return; try { setLoading(true); const { error } = await legacyDisabledClient.from("stock_products").delete().eq("id", id); if (error) throw error; await logActivity("product_delete", `Ürün silindi: ${product?.name || id}`, "stock_products", id); state.products = (state.products || []).filter(p => String(p.id) !== String(id)); state.filteredProducts = (state.filteredProducts || []).filter(p => String(p.id) !== String(id)); state.operationResults = (state.operationResults || []).filter(p => String(p.id) !== String(id)); state.movementResults = (state.movementResults || []).filter(p => String(p.id) !== String(id)); if (el.productTableBody) renderProducts(); if (el.operationResultBox) renderOperationCards(state.operationResults || []); showToast("Ürün silindi"); state.operationFilterOptionsLoaded = false; await loadDashboardStats(); if (state.activeTab === "operation") { await queryOperationProducts(); await loadMovements(); } else { await loadMovements(); } } catch (err) { console.error(err); showToast(err.message || "Ürün silinemedi", true); } finally { setLoading(false); } };
 window.quickStockAction = async function(id, type, fixedQty = null) {
   if (!requireRoleAction(["admin", "depo"], "Stok giriş/çıkış yetkisi sadece Admin/Depo")) return;
 
@@ -962,7 +962,7 @@ window.quickStockAction = async function(id, type, fixedQty = null) {
   try {
     setLoading(true);
 
-    const { data: newQuantity, error } = await supabaseClient.rpc("apply_manual_stock_movement", {
+    const { data: newQuantity, error } = await legacyDisabledClient.rpc("apply_manual_stock_movement", {
       p_product_id: id,
       p_direction: direction,
       p_quantity: Number(quantity),

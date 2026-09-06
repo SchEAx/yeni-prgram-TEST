@@ -62,7 +62,7 @@ el.productForm.addEventListener("submit", async (e) => {
     rememberProductSuggestions(payload);
 
     if (payload.id) {
-      const { data: beforeRow, error: beforeError } = await supabaseClient
+      const { data: beforeRow, error: beforeError } = await legacyDisabledClient
         .from("stock_products")
         .select("quantity,product_name")
         .eq("id", payload.id)
@@ -72,7 +72,7 @@ el.productForm.addEventListener("submit", async (e) => {
       const uploaded = await uploadProductImageIfNeeded(payload.id);
       payload.imageUrl = uploaded.imageUrl;
       payload.imageThumbUrl = uploaded.imageThumbUrl;
-      const { error } = await supabaseClient.from("stock_products").update(toProductRow(payload)).eq("id", payload.id);
+      const { error } = await legacyDisabledClient.from("stock_products").update(toProductRow(payload)).eq("id", payload.id);
       if (error) throw error;
 
       const auditOk = await safeRecordDirectStockDelta({
@@ -89,7 +89,7 @@ el.productForm.addEventListener("submit", async (e) => {
       const uploaded = await uploadProductImageIfNeeded(tempImageId);
       payload.imageUrl = uploaded.imageUrl;
       payload.imageThumbUrl = uploaded.imageThumbUrl;
-      const { data, error } = await supabaseClient.from("stock_products").insert(toProductRow(payload)).select("id").single();
+      const { data, error } = await legacyDisabledClient.from("stock_products").insert(toProductRow(payload)).select("id").single();
       if (error) throw error;
       const auditOk = await safeRecordDirectStockDelta({
         productId: data?.id,

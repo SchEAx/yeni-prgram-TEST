@@ -50,7 +50,7 @@ async function applyCategoryPriceUpdate() {
     );
   }
 
-  const { data, error } = await supabaseClient
+  const { data, error } = await legacyDisabledClient
     .from("stock_products")
     .select("id,product_name,category,purchase_price,average_sale_price")
     .eq("category", category);
@@ -82,7 +82,7 @@ async function applyCategoryPriceUpdate() {
   const chunkSize = 200;
   for (let i = 0; i < updates.length; i += chunkSize) {
     const chunk = updates.slice(i, i + chunkSize);
-    const { error: updateError } = await supabaseClient.from("stock_products").upsert(chunk, { onConflict: "id" });
+    const { error: updateError } = await legacyDisabledClient.from("stock_products").upsert(chunk, { onConflict: "id" });
     if (updateError) return showToast(`Fiyat güncelleme yarıda kaldı: ${updateError.message}`, true);
   }
 
@@ -188,9 +188,9 @@ async function saveCategoryValueFromForm(e) {
   const id = el.categoryValueId?.value || "";
   let error;
   if (id) {
-    ({ error } = await supabaseClient.from("category_values").update(payload).eq("id", id));
+    ({ error } = await legacyDisabledClient.from("category_values").update(payload).eq("id", id));
   } else {
-    ({ error } = await supabaseClient.from("category_values").upsert(payload, { onConflict: "category" }));
+    ({ error } = await legacyDisabledClient.from("category_values").upsert(payload, { onConflict: "category" }));
   }
   if (error) return showToast(error.message || "Kategori değeri kaydedilemedi", true);
   clearCategoryValueForm();
@@ -200,7 +200,7 @@ async function saveCategoryValueFromForm(e) {
 window.saveCategoryValueFromForm = saveCategoryValueFromForm;
 window.deleteCategoryValue = async function(id) {
   if (!(await appConfirm("Bu kategori fiyat kaydı silinsin mi? Stok ürünleri silinmez, sadece fiyat tanımı gider.", { danger: true }))) return;
-  const { error } = await supabaseClient.from("category_values").delete().eq("id", id);
+  const { error } = await legacyDisabledClient.from("category_values").delete().eq("id", id);
   if (error) return showToast(error.message || "Silinemedi", true);
   await loadCategoryValues();
   showToast("Kategori fiyatı silindi");
@@ -257,7 +257,7 @@ async function fetchRecentOutgoingMovements(days = 7) {
   const pageSize = 1000;
   while (true) {
     const to = from + pageSize - 1;
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("stock_movements")
       .select("product_id,quantity,movement_type,created_at,description,stock_products(product_name,product_brand,category,vehicle_brand,vehicle_model,vehicle_type,vehicle_year,quantity,location)")
       .gte("created_at", start.toISOString())
@@ -498,7 +498,7 @@ async function loadDeleteMarkedCount() {
   if (deleteBtn) deleteBtn.disabled = true;
 
   try {
-    const { count, error } = await supabaseClient
+    const { count, error } = await legacyDisabledClient
       .from("stock_products")
       .select("id", { count: "exact", head: true })
       .in("vehicle_brand", DELETE_MARK_VARIANTS);
@@ -528,7 +528,7 @@ async function fetchDeleteMarkedProductIds() {
   const pageSize = 1000;
 
   while (true) {
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("stock_products")
       .select("id")
       .in("vehicle_brand", DELETE_MARK_VARIANTS)
@@ -579,13 +579,13 @@ async function deleteMarkedProducts() {
     for (let i = 0; i < ids.length; i += chunkSize) {
       const chunk = ids.slice(i, i + chunkSize);
       if (infoEl) infoEl.textContent = `Hareket kayıtları temizleniyor: ${Math.min(i + chunk.length, ids.length)} / ${ids.length}`;
-      await supabaseClient.from("stock_movements").delete().in("product_id", chunk);
+      await legacyDisabledClient.from("stock_movements").delete().in("product_id", chunk);
     }
 
     for (let i = 0; i < ids.length; i += chunkSize) {
       const chunk = ids.slice(i, i + chunkSize);
       if (infoEl) infoEl.textContent = `Ürünler siliniyor: ${Math.min(i + chunk.length, ids.length)} / ${ids.length}`;
-      const { error } = await supabaseClient.from("stock_products").delete().in("id", chunk);
+      const { error } = await legacyDisabledClient.from("stock_products").delete().in("id", chunk);
       if (error) throw error;
     }
 

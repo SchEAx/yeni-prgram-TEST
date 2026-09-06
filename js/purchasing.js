@@ -6,7 +6,7 @@ function purchaseProductById(id) {
 }
 async function loadSharedPurchaseOrderDraft() {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("purchase_order_draft_items")
       .select("product_id,quantity,supplier_hint,note,updated_at,stock_products(product_name,product_brand,category,vehicle_brand,vehicle_model,vehicle_type,vehicle_year)")
       .order("updated_at", { ascending: true });
@@ -31,8 +31,8 @@ async function loadSharedPurchaseOrderDraft() {
   }
 }
 function subscribeSharedPurchaseOrderDraft() {
-  if (purchaseDraftRealtimeChannel || !supabaseClient?.channel) return;
-  purchaseDraftRealtimeChannel = supabaseClient
+  if (purchaseDraftRealtimeChannel || !legacyDisabledClient?.channel) return;
+  purchaseDraftRealtimeChannel = legacyDisabledClient
     .channel("shared-purchase-order-draft")
     .on("postgres_changes", { event: "*", schema: "public", table: "purchase_order_draft_items" }, () => loadSharedPurchaseOrderDraft().catch(() => {}))
     .subscribe();
@@ -61,7 +61,7 @@ window.addProductToPurchaseOrder = async function(productId) {
   if (!canAccessCategory(p.category)) return showToast("Bu ürün kategorisine yetkin yok", true);
   const qty = getOperationQty(productId);
   try {
-    const { error } = await supabaseClient.rpc("add_purchase_order_draft_item", { p_product_id: productId, p_quantity: qty, p_actor: currentStaff().name });
+    const { error } = await legacyDisabledClient.rpc("add_purchase_order_draft_item", { p_product_id: productId, p_quantity: qty, p_actor: currentStaff().name });
     if (error) throw error;
     await loadSharedPurchaseOrderDraft();
     showToast(`${p.name || p.category || "Ürün"} sipariş havuzuna eklendi ✅`);
@@ -69,25 +69,25 @@ window.addProductToPurchaseOrder = async function(productId) {
 };
 window.setPurchaseOrderItemQty = async function(productId, value) {
   const qty = Math.max(1, Number(value || 1));
-  const { error } = await supabaseClient.from("purchase_order_draft_items").update({ quantity: qty, updated_at: new Date().toISOString(), added_by: currentStaff().name }).eq("product_id", productId);
+  const { error } = await legacyDisabledClient.from("purchase_order_draft_items").update({ quantity: qty, updated_at: new Date().toISOString(), added_by: currentStaff().name }).eq("product_id", productId);
   if (error) return showToast(error.message, true);
   await loadSharedPurchaseOrderDraft();
 };
 window.setPurchaseDraftSupplier = async function(productId, value) {
-  const { error } = await supabaseClient.from("purchase_order_draft_items").update({ supplier_hint: String(value || "").trim() || null, updated_at: new Date().toISOString() }).eq("product_id", productId);
+  const { error } = await legacyDisabledClient.from("purchase_order_draft_items").update({ supplier_hint: String(value || "").trim() || null, updated_at: new Date().toISOString() }).eq("product_id", productId);
   if (error) return showToast(error.message, true);
   const row = state.purchaseOrderDraft.find(x => String(x.productId) === String(productId));
   if (row) row.supplierHint = String(value || "").trim();
 };
 window.removePurchaseOrderItem = async function(productId) {
-  const { error } = await supabaseClient.from("purchase_order_draft_items").delete().eq("product_id", productId);
+  const { error } = await legacyDisabledClient.from("purchase_order_draft_items").delete().eq("product_id", productId);
   if (error) return showToast(error.message, true);
   await loadSharedPurchaseOrderDraft();
 };
 window.clearPurchaseOrderDraft = async function() {
   if (!state.purchaseOrderDraft.length) return;
   if (!(await appConfirm("Sipariş havuzu bütün cihazlarda temizlensin mi?", { danger: true, okText: "Temizle" }))) return;
-  const { error } = await supabaseClient.from("purchase_order_draft_items").delete().not("product_id", "is", null);
+  const { error } = await legacyDisabledClient.from("purchase_order_draft_items").delete().not("product_id", "is", null);
   if (error) return showToast(error.message, true);
   await loadSharedPurchaseOrderDraft();
 };
@@ -152,12 +152,12 @@ window.createGroupedPurchaseOrder = async function() {
   try {
     setLoading(true);
     const orderNo = purchaseOrderNo();
-    const { data: order, error: orderError } = await supabaseClient.from("purchase_orders").insert({ order_no: orderNo, supplier, expected_date: el.purchaseGroupExpectedDate?.value || null, note: String(el.purchaseGroupNote?.value || "").trim() || null, status: "bekleniyor", created_by: currentStaff().name }).select("id").single();
+    const { data: order, error: orderError } = await legacyDisabledClient.from("purchase_orders").insert({ order_no: orderNo, supplier, expected_date: el.purchaseGroupExpectedDate?.value || null, note: String(el.purchaseGroupNote?.value || "").trim() || null, status: "bekleniyor", created_by: currentStaff().name }).select("id").single();
     if (orderError) throw orderError;
     const items = selected.map(i => ({ order_id: order.id, product_id: i.productId, ordered_quantity: Number(i.quantity), received_quantity: 0 }));
-    const { error: itemError } = await supabaseClient.from("purchase_order_items").insert(items);
+    const { error: itemError } = await legacyDisabledClient.from("purchase_order_items").insert(items);
     if (itemError) throw itemError;
-    const { error: clearError } = await supabaseClient.from("purchase_order_draft_items").delete().in("product_id", ids);
+    const { error: clearError } = await legacyDisabledClient.from("purchase_order_draft_items").delete().in("product_id", ids);
     if (clearError) throw clearError;
     await logActivity("purchase_order_create", `${orderNo} - ${supplier} - ${items.length} kalem`, "purchase_orders", order.id);
     closePurchaseOrderGroupModal();
@@ -191,7 +191,7 @@ function renderPurchaseOrders() {
 window.loadPurchaseOrders = async function() {
   if (!el.purchaseOrderList) return;
   try {
-    const { data, error } = await supabaseClient.from("purchase_orders")
+    const { data, error } = await legacyDisabledClient.from("purchase_orders")
       .select("id,order_no,supplier,expected_date,note,status,created_at,completed_at,purchase_order_items(id,product_id,ordered_quantity,received_quantity,stock_products(product_name,category,vehicle_brand,vehicle_model))")
       .order("created_at", { ascending: false }).limit(100);
     if (error) throw error;
@@ -210,7 +210,7 @@ window.receivePurchaseOrderPartial = async function(orderId) {
   if (!(await appConfirm(`${lines.length} kalem için girilen miktarlar stoğa işlensin mi?`, { okText: "Stoğa İşle" }))) return;
   try {
     setLoading(true);
-    const { error } = await supabaseClient.rpc("receive_purchase_order_partial", { p_order_id: orderId, p_lines: lines, p_actor: currentStaff().name });
+    const { error } = await legacyDisabledClient.rpc("receive_purchase_order_partial", { p_order_id: orderId, p_lines: lines, p_actor: currentStaff().name });
     if (error) throw error;
     await logActivity("purchase_receive_partial", `${lines.length} kalem / ${lines.reduce((s,x)=>s+Number(x.quantity||0),0)} adet sipariş stoğa işlendi`, "purchase_orders", orderId);
     await Promise.all([loadPurchaseOrders(), loadDashboardStats(), loadMovements()]);
@@ -226,7 +226,7 @@ window.receivePurchaseOrderAll = async function(orderId) {
   if (!(await appConfirm(`Siparişte kalan toplam ${lines.reduce((s,x)=>s+x.quantity,0)} ürün stoğa işlensin mi?`, { okText: "Tamamını Al" }))) return;
   try {
     setLoading(true);
-    const { error } = await supabaseClient.rpc("receive_purchase_order_partial", { p_order_id: orderId, p_lines: lines, p_actor: currentStaff().name });
+    const { error } = await legacyDisabledClient.rpc("receive_purchase_order_partial", { p_order_id: orderId, p_lines: lines, p_actor: currentStaff().name });
     if (error) throw error;
     await logActivity("purchase_receive_all", `${lines.length} kalem / ${lines.reduce((s,x)=>s+Number(x.quantity||0),0)} adet siparişin kalanı stoğa işlendi`, "purchase_orders", orderId);
     await Promise.all([loadPurchaseOrders(), loadDashboardStats(), loadMovements()]);
@@ -238,7 +238,7 @@ window.receivePurchaseOrder = window.receivePurchaseOrderAll;
 window.cancelPurchaseOrder = async function(orderId) {
   const order = state.purchaseOrders.find(o => String(o.id) === String(orderId));
   if (!order || !(await appConfirm(`${order.order_no} iptal edilsin mi? Stok değişmeyecek.`, { danger: true, okText: "İptal Et" }))) return;
-  const { error } = await supabaseClient.from("purchase_orders").update({ status: "iptal" }).eq("id", orderId).in("status", ["bekleniyor", "kismi"]);
+  const { error } = await legacyDisabledClient.from("purchase_orders").update({ status: "iptal" }).eq("id", orderId).in("status", ["bekleniyor", "kismi"]);
   if (error) return showToast(error.message, true);
   await logActivity("purchase_order_cancel", `${order.order_no || "Sipariş"} iptal edildi`, "purchase_orders", orderId);
   await loadPurchaseOrders(); showToast("Sipariş iptal edildi");

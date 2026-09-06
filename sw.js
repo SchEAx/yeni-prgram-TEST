@@ -1,26 +1,26 @@
-const CACHE_NAME = "garage-stock-v3-13-1-migration-test-jwt-16-0";
+const CACHE_NAME = "garage-stock-16-1";
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css?v=16.0",
-  "./js/core.js?v=16.0",
-  "./js/inventory.js?v=16.0",
-  "./js/sales-dashboard.js?v=16.0",
-  "./js/staff.js?v=16.0",
-  "./js/sales.js?v=16.0",
-  "./js/requests.js?v=16.0",
-  "./js/surveys.js?v=16.0",
-  "./js/management.js?v=16.0",
-  "./js/purchasing.js?v=16.0",
-  "./js/navigation.js?v=16.0",
-  "./js/reports.js?v=16.0",
-  "./js/migration-api.js?v=16.0",
-  "./js/events.js?v=16.0",
-  "./js/excel.js?v=16.0",
-  "./js/migration-excel.js?v=16.0",
-  "./app.js?v=16.0",
-  "./manifest.webmanifest?v=16.0",
+  "./style.css?v=16.1",
+  "./js/core.js?v=16.1",
+  "./js/inventory.js?v=16.1",
+  "./js/sales-dashboard.js?v=16.1",
+  "./js/staff.js?v=16.1",
+  "./js/sales.js?v=16.1",
+  "./js/requests.js?v=16.1",
+  "./js/surveys.js?v=16.1",
+  "./js/management.js?v=16.1",
+  "./js/purchasing.js?v=16.1",
+  "./js/navigation-v16.1.js?v=16.1",
+  "./js/reports.js?v=16.1",
+  "./js/migration-api.js?v=16.1",
+  "./js/events.js?v=16.1",
+  "./js/excel.js?v=16.1",
+  "./js/migration-excel.js?v=16.1",
+  "./app.js?v=16.1",
+  "./manifest.webmanifest?v=16.1",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/apple-touch-icon.png",
@@ -85,7 +85,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // v16.0: Cache-first tamamen kaldırıldı.
+  // v16.1: Cache-first tamamen kaldırıldı.
   // Ağ varsa her zaman yeni dosyayı kullan; cache sadece offline fallback.
   event.respondWith(
     fetch(request, { cache: "no-cache" })

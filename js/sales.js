@@ -492,7 +492,7 @@ Stoklar geri eklenecek ve cirodan düşülecek.`, { danger: true, okText: "Satı
       const currentQty = Number(product?.stock || 0);
       const newQty = currentQty + Number(item.qty || 0);
 
-      const { error: updateError } = await supabaseClient
+      const { error: updateError } = await legacyDisabledClient
         .from("stock_products")
         .update({ quantity: newQty })
         .eq("id", item.productId);
@@ -501,7 +501,7 @@ Stoklar geri eklenecek ve cirodan düşülecek.`, { danger: true, okText: "Satı
 
       const desc = `Hızlı satış iade (${sale.paymentType || "-"}) - Personel: ${staff.name} (${roleLabel(staff.role)}) - İptal Fiş: ${sale.saleNo} - Birim: ${formatSaleMoney(item.price)} - Toplam: ${formatSaleMoney(item.lineTotal)} - Neden: ${reason || "-"}`;
 
-      const { error: movementError } = await supabaseClient
+      const { error: movementError } = await legacyDisabledClient
         .from("stock_movements")
         .insert({
           product_id: item.productId,
@@ -567,7 +567,7 @@ async function completeQuickSale() {
       const product = state.products.find((p) => String(p.id) === String(item.productId));
       const newQty = Number(product.stock || 0) - Number(item.qty || 0);
 
-      const { error: updateError } = await supabaseClient
+      const { error: updateError } = await legacyDisabledClient
         .from("stock_products")
         .update({ quantity: newQty })
         .eq("id", item.productId);
@@ -585,7 +585,7 @@ const discountInfo = Number(saleSnapshot.discount || 0) > 0
 
 const desc = `Hızlı satış (${paymentType}) - Personel: ${staff.name} (${roleLabel(staff.role)}) - Fiş: ${saleSnapshot.saleNo} - Birim: ${formatSaleMoney(item.price)} - Toplam: ${formatSaleMoney(item.netLineTotal ?? (Number(item.qty || 0) * Number(item.price || 0)))}${discountInfo}${customerInfo ? " - " + customerInfo : ""}${note ? " - Not: " + note : ""}`;
 
-      const { error: movementError } = await supabaseClient
+      const { error: movementError } = await legacyDisabledClient
         .from("stock_movements")
         .insert({
           product_id: item.productId,

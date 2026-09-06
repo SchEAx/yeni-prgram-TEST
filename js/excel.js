@@ -7,7 +7,7 @@ async function fetchProductsForExcel() {
 
   while (true) {
     const to = from + pageSize - 1;
-    let query = supabaseClient
+    let query = legacyDisabledClient
       .from("stock_products")
       .select(STOCK_PRODUCT_SELECT)
       .order("product_name", { ascending: true })
@@ -319,7 +319,7 @@ async function uploadStockExcel(event) {
     const existingById = new Map();
     const updateIds = preparedRows.map(row => row.id).filter(Boolean);
     for (let i = 0; i < updateIds.length; i += 300) {
-      const { data, error } = await supabaseClient
+      const { data, error } = await legacyDisabledClient
         .from("stock_products")
         .select("id,quantity,product_name")
         .in("id", updateIds.slice(i, i + 300));
@@ -348,12 +348,12 @@ async function uploadStockExcel(event) {
           const afterQty = Number(row.payload.quantity || 0);
 
           if (row.id) {
-            const result = await supabaseClient.from("stock_products").update(row.payload).eq("id", row.id);
+            const result = await legacyDisabledClient.from("stock_products").update(row.payload).eq("id", row.id);
             if (result.error) throw result.error;
             return { ok: true, row, productId: row.id, beforeQty, afterQty, isNew: false };
           }
 
-          const result = await supabaseClient.from("stock_products").insert(row.payload).select("id").single();
+          const result = await legacyDisabledClient.from("stock_products").insert(row.payload).select("id").single();
           if (result.error) throw result.error;
           return { ok: true, row, productId: result.data?.id, beforeQty: 0, afterQty, isNew: true };
         } catch (error) {
@@ -384,7 +384,7 @@ async function uploadStockExcel(event) {
       }
 
       if (movementRows.length) {
-        const { error: movementError } = await supabaseClient.from("stock_movements").insert(movementRows);
+        const { error: movementError } = await legacyDisabledClient.from("stock_movements").insert(movementRows);
         if (movementError) {
           console.error("Excel stok hareketleri kaydedilemedi:", movementError);
           movementAuditFailed += movementRows.length;

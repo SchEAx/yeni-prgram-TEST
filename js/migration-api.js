@@ -66,11 +66,11 @@ writeRolePermissions = function(permissions) {
   localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalized));
   return normalized;
 };
-loadRolePermissionsFromSupabase = async function() {
+loadRolePermissionsFromServer = async function() {
   const payload = await apiFetch("/api/settings/role-permissions");
   localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalizeRolePermissions(payload.role_permissions || {})));
 };
-saveRolePermissionsToSupabase = async function() {
+saveRolePermissionsToServer = async function() {
   throw new Error("Migration test: Rol izinleri yazma henüz taşınmadı.");
 };
 canAccessTab = function(tab, role = currentStaff().role) {
@@ -126,7 +126,7 @@ loginWithSelectedStaff = async function() {
     if (!payload.token) throw new Error("API token döndürmedi");
     setMigrationToken(payload.token);
     const staff = await loadAuthenticatedProfile();
-    await Promise.all([loadRolePermissionsFromSupabase(), loadStaffListFromSupabase()]);
+    await Promise.all([loadRolePermissionsFromServer(), loadStaffListFromServer()]);
     if (el.loginPasswordInput) el.loginPasswordInput.value = "";
     hideLogin(); updateUserPill(); applyRoleVisibility(); renderStaffSelector();
     switchTab("operation");
@@ -143,7 +143,7 @@ initAuthGate = async function() {
   if (!migrationToken()) { showLogin(); return false; }
   try {
     await loadAuthenticatedProfile();
-    await Promise.all([loadRolePermissionsFromSupabase(), loadStaffListFromSupabase()]);
+    await Promise.all([loadRolePermissionsFromServer(), loadStaffListFromServer()]);
     hideLogin(); updateUserPill(); applyRoleVisibility();
     return true;
   } catch (err) {
@@ -617,7 +617,7 @@ window.openFullProductFromPriceEditor = function(productId) {
 };
 
 // ---- Personel / rol okumaları ----
-loadStaffListFromSupabase = async function() {
+loadStaffListFromServer = async function() {
   const payload = await apiFetch("/api/users");
   const cleaned = cleanStaffList((payload.users || []).map(row => normalizeStaffItem({
     authUserId: row.auth_user_id,
@@ -637,7 +637,7 @@ loadStaffListFromSupabase = async function() {
   }
   return cleaned;
 };
-saveStaffListToSupabase = async function() {
+saveStaffListToServer = async function() {
   showToast("Migration test: Personel yazma işlemi kapalı", true);
   return false;
 };
@@ -648,13 +648,21 @@ function migrationAssetUrl(value) {
   const url = String(value || "").trim();
   if (!url) return "";
   if (/^blob:|^data:/i.test(url)) return url;
-  if (/supabase\.co/i.test(url)) return "";
-  if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith("/uploads/")) return MIGRATION_API_BASE + url;
+
+  if (/^https?:\/\//i.test(url)) {
+    try {
+      const parsed = new URL(url, window.location.href);
+      const apiOrigin = new URL(MIGRATION_API_BASE).origin;
+      if (parsed.origin === apiOrigin || parsed.origin === window.location.origin) return url;
+    } catch {}
+    return "";
+  }
+
   return url;
 }
 
-// Add ekranı state.products boş diye eski Supabase loadProducts çağrısına düşmesin.
+// Add ekranı state.products boş diye eski veri katmanı loadProducts çağrısına düşmesin.
 loadProducts = async function() {
   await loadOperationFilterOptions().catch(() => {});
   return state.products || [];
@@ -672,7 +680,7 @@ updateProductImagePreview = function(url = "") {
   }
   if (el.productImageStatus) {
     el.productImageStatus.textContent = raw && !displayUrl
-      ? "Eski Supabase görseli migration testte gösterilmiyor"
+      ? "Eski harici depolama görseli migration testte gösterilmiyor"
       : displayUrl ? "Resim hazır" : "Resim seçilmedi";
   }
   if (el.productImageViewBtn) el.productImageViewBtn.disabled = !displayUrl;
@@ -1466,7 +1474,7 @@ loadSharedPurchaseOrderDraft = async function() {
 };
 window.loadSharedPurchaseOrderDraft = loadSharedPurchaseOrderDraft;
 
-// Supabase Realtime yerine manuel yenileme kullanıyoruz.
+// sunucu Realtime yerine manuel yenileme kullanıyoruz.
 subscribeSharedPurchaseOrderDraft = function() {};
 window.subscribeSharedPurchaseOrderDraft = subscribeSharedPurchaseOrderDraft;
 
@@ -1656,7 +1664,7 @@ function migrationUserIdFor(staff) {
   return migrationUserIdByUsername.get(migrationUsernameKey(staff?.username)) || "";
 }
 
-loadStaffListFromSupabase = async function() {
+loadStaffListFromServer = async function() {
   const payload = await apiFetch("/api/users");
   migrationUserIdByUsername.clear();
   const rows = (payload.users || []).filter(row => row?.is_active !== false);
@@ -1733,7 +1741,7 @@ window.openStaffEditor = async function() {
   if (!el.staffEditor || !el.staffEditorBody) return;
   try {
     setLoading(true);
-    await loadStaffListFromSupabase();
+    await loadStaffListFromServer();
     el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
     setStaffEditorMessage("Personel değişiklikleri doğrudan PostgreSQL migration-test veritabanına kaydedilir.", "info");
     el.staffEditor.classList.remove("hidden");
@@ -1758,7 +1766,7 @@ window.migrationDeactivateStaffRow = async function(button) {
   try {
     setLoading(true);
     await apiFetch(`/api/users/${encodeURIComponent(userId)}`, { method: "PATCH", body: { is_active: false } });
-    await loadStaffListFromSupabase();
+    await loadStaffListFromServer();
     el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
     showToast(`${name} pasife alındı ✅`);
   } catch (err) { showToast(err?.message || "Personel pasife alınamadı", true); }
@@ -1807,7 +1815,7 @@ window.saveStaffEditor = async function() {
         if (created?.user?.id) row.dataset.userId = created.user.id;
       }
     }
-    await loadStaffListFromSupabase();
+    await loadStaffListFromServer();
     renderStaffSelector();
     renderUserCategoryPermissions();
     el.staffEditorBody.innerHTML = readStaffList().map(migrationStaffEditorRow).join("");
@@ -1841,7 +1849,7 @@ window.saveUserCategoryPermissions = async function() {
       card.querySelectorAll('[data-user-action]').forEach(x => permissions[x.dataset.userAction] = x.checked);
       await apiFetch(`/api/users/${encodeURIComponent(userId)}`, { method: "PATCH", body: { allowed_categories, permissions } });
     }
-    await loadStaffListFromSupabase();
+    await loadStaffListFromServer();
     renderUserCategoryPermissions();
     applyRoleVisibility();
     await logActivity("user_category_permissions", "Personel kategori ve işlem yetkileri PostgreSQL'e kaydedildi", "app_users", "permissions");
@@ -1868,7 +1876,7 @@ window.saveRolePermissions = async function() {
   finally { setLoading(false); }
 };
 
-saveRolePermissionsToSupabase = async function(permissions) {
+saveRolePermissionsToServer = async function(permissions) {
   const payload = await apiFetch("/api/settings/role-permissions", { method: "PUT", body: { value: permissions } });
   return payload.setting?.value || permissions;
 };
@@ -1879,7 +1887,7 @@ window.resetRolePermissions = async function() {
   try {
     setLoading(true);
     const defaults = normalizeRolePermissions(DEFAULT_ROLE_PERMISSIONS);
-    const saved = await saveRolePermissionsToSupabase(defaults);
+    const saved = await saveRolePermissionsToServer(defaults);
     localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalizeRolePermissions(saved)));
     applyRoleVisibility();
     renderRolePermissionEditor();
@@ -1888,7 +1896,7 @@ window.resetRolePermissions = async function() {
   finally { setLoading(false); }
 };
 
-// Settings sekmesi sadece tema/yerel görüntü ayarlarını kullanır; Supabase yazma çağrıları migration testte yoktur.
+// Settings sekmesi sadece tema/yerel görüntü ayarlarını kullanır; sunucu yazma çağrıları migration testte yoktur.
 
 
 // ---- v11 Yönetim / SİLİNECEK toplu ürün temizleme ----
@@ -2058,7 +2066,7 @@ window.deleteMarkedProducts = deleteMarkedProducts;
 
 
 // ============================================================
-// Migration v15.7 - PostgreSQL Plaka / Müşteri Geçmişi
+// Migration v15.8 - PostgreSQL Plaka / Müşteri Geçmişi
 // ============================================================
 window.renderPlateHistory = async function() {
   const input = document.getElementById("historySearchInput");

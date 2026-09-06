@@ -1,12 +1,12 @@
 // Core: yapılandırma, state, DOM, yetkiler, bildirimler ve ortak yardımcılar
-const APP_VERSION = 'v3.13.1-MIGRATION-TEST-JWT-15.7';
+const APP_VERSION = '16.1';
 let isOffline = !navigator.onLine;
 let globalLoading = false;
 
 const VAPID_PUBLIC_KEY = "";
-// Migration-test güvenlik kilidi: eski Supabase kodu dosyalarda dursa bile ağ isteği yapamaz.
+// Migration-test güvenlik kilidi: eski veri-katmanı kodu dosyalarda dursa bile ağ isteği yapamaz.
 const migrationDisabled = () => { throw new Error("Migration test: Bu özellik henüz PostgreSQL API'ye taşınmadı."); };
-const supabaseClient = new Proxy({
+const legacyDisabledClient = new Proxy({
   auth: {
     onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
     getSession: migrationDisabled, getUser: migrationDisabled, signInWithPassword: migrationDisabled,
@@ -233,23 +233,23 @@ function readRolePermissions() {
 function writeRolePermissions(permissions) {
   const normalized = normalizeRolePermissions(permissions);
   localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalized));
-  saveRolePermissionsToSupabase(normalized).catch(() => {});
+  saveRolePermissionsToServer(normalized).catch(() => {});
   return normalized;
 }
-async function loadRolePermissionsFromSupabase() {
+async function loadRolePermissionsFromServer() {
   try {
-    const { data, error } = await supabaseClient.from("app_settings").select("value").eq("key", "role_permissions").maybeSingle();
+    const { data, error } = await legacyDisabledClient.from("app_settings").select("value").eq("key", "role_permissions").maybeSingle();
     if (error || !data?.value) return;
     localStorage.setItem(ROLE_PERMISSION_STORE_KEY, JSON.stringify(normalizeRolePermissions(data.value)));
   } catch (err) {
-    console.warn("Yetki ayarları Supabase'den alınamadı, local devam:", err?.message || err);
+    console.warn("Yetki ayarları eski veri katmanı'den alınamadı, local devam:", err?.message || err);
   }
 }
-async function saveRolePermissionsToSupabase(permissions) {
+async function saveRolePermissionsToServer(permissions) {
   try {
-    await supabaseClient.from("app_settings").upsert({ key: "role_permissions", value: normalizeRolePermissions(permissions), updated_at: new Date().toISOString() }, { onConflict: "key" });
+    await legacyDisabledClient.from("app_settings").upsert({ key: "role_permissions", value: normalizeRolePermissions(permissions), updated_at: new Date().toISOString() }, { onConflict: "key" });
   } catch (err) {
-    console.warn("Yetki ayarları Supabase'e yazılamadı:", err?.message || err);
+    console.warn("Yetki ayarları eski veri katmanı'e yazılamadı:", err?.message || err);
   }
 }
 function permissionsForRole(role) { return readRolePermissions()[role] || readRolePermissions().kasa; }
@@ -274,7 +274,7 @@ function setCurrentSession(staff) {
   localStorage.setItem(CURRENT_STAFF_STORE_KEY, staff.name);
   updateStaffMeta(staff.name, { lastLoginAt: session.loginAt, lastSeenAt: session.loginAt, role: staff.role });
   state.currentUser = session;
-  supabaseClient
+  legacyDisabledClient
   .from("app_users")
   .update({
     last_seen_at: new Date().toISOString(),
@@ -288,7 +288,7 @@ async function setUserOffline() {
     const session = currentSession();
     if (!session?.name) return;
 
-    await supabaseClient
+    await legacyDisabledClient
       .from("app_users")
       .update({
         last_seen_at: null
@@ -314,13 +314,13 @@ function authEmailForUsername(username) {
   return `${slug || "personel"}@garage.local`;
 }
 function populateLoginStaffSelect() {
-  // Supabase Auth + RLS modunda kullanıcı listesi girişten önce veritabanından gösterilmez.
+  // eski veri katmanı Auth + RLS modunda kullanıcı listesi girişten önce veritabanından gösterilmez.
   // Alan artık serbest kullanıcı adı girişidir.
 }
 async function loadAuthenticatedProfile() {
-  const { data: authData, error: authError } = await supabaseClient.auth.getUser();
+  const { data: authData, error: authError } = await legacyDisabledClient.auth.getUser();
   if (authError || !authData?.user) throw authError || new Error("Oturum bulunamadı");
-  const { data, error } = await supabaseClient
+  const { data, error } = await legacyDisabledClient
     .from("app_users")
     .select("auth_user_id,username,name,role,is_active,last_seen_at,last_login_at,allowed_categories,permissions")
     .eq("auth_user_id", authData.user.id)
@@ -373,41 +373,41 @@ async function loginWithSelectedStaff() {
   if (!username || !pass) return showToast("Kullanıcı adı ve şifre gerekli", true);
   try {
     setLoading(true);
-    const { error } = await supabaseClient.auth.signInWithPassword({ email: authEmailForUsername(username), password: pass });
+    const { error } = await legacyDisabledClient.auth.signInWithPassword({ email: authEmailForUsername(username), password: pass });
     if (error) throw error;
     const staff = await loadAuthenticatedProfile();
     if (el.loginPasswordInput) el.loginPasswordInput.value = "";
     hideLogin(); updateUserPill(); applyRoleVisibility();
-    await loadStaffListFromSupabase();
+    await loadStaffListFromServer();
     renderStaffSelector(); renderUsersList(); renderRolePermissionEditor(); renderUserCategoryPermissions();
     const target = canAccessTab(state.activeTab, staff.role) ? state.activeTab : (ROLE_DEFAULT_TAB[staff.role] || "operation");
     switchTab(target);
     await logActivity("login", `${staff.name} giriş yaptı`, "staff", staff.name);
     showToast(`Hoş geldin ${staff.name} ✅`);
   } catch (err) {
-    await supabaseClient.auth.signOut({ scope: "local" }).catch(() => {});
+    await legacyDisabledClient.auth.signOut({ scope: "local" }).catch(() => {});
     showToast(err?.message === "Invalid login credentials" ? "Kullanıcı adı veya şifre hatalı" : (err?.message || "Giriş yapılamadı"), true);
   } finally { setLoading(false); }
 }
 async function initAuthGate() {
-  const { data } = await supabaseClient.auth.getSession();
+  const { data } = await legacyDisabledClient.auth.getSession();
   if (!data?.session) { showLogin(); return; }
   try {
     const staff = await loadAuthenticatedProfile();
     hideLogin();
-    await loadRolePermissionsFromSupabase();
-    await loadStaffListFromSupabase();
+    await loadRolePermissionsFromServer();
+    await loadStaffListFromServer();
     updateUserPill(); applyRoleVisibility(); renderUsersList(); renderRolePermissionEditor(); renderUserCategoryPermissions();
   } catch (err) {
     console.warn("Güvenli oturum açılamadı:", err);
-    await supabaseClient.auth.signOut({ scope: "local" });
+    await legacyDisabledClient.auth.signOut({ scope: "local" });
     showLogin();
   }
 }
 window.logoutCurrentUser = async function() {
   const staff = currentStaff();
   await logActivity("logout", `${staff.name} çıkış yaptı`, "staff", staff.name).catch(() => {});
-  await supabaseClient.auth.signOut({ scope: "local" });
+  await legacyDisabledClient.auth.signOut({ scope: "local" });
   localStorage.removeItem(SESSION_STORE_KEY);
   localStorage.removeItem(CURRENT_STAFF_STORE_KEY);
   localStorage.removeItem(STAFF_STORE_KEY);
@@ -429,7 +429,7 @@ async function logActivity(action, description, entity_table = null, entity_id =
   state.activityLogs = [item, ...(state.activityLogs || []).filter(x => String(x.id) !== String(item.id))].slice(0, 120);
   if (state.activityLogTableReady) {
     try {
-      const { error } = await supabaseClient.from("app_activity_logs").insert({ actor_name: item.actor_name, actor_role: item.actor_role, action: item.action, description: item.description, entity_table: item.entity_table, entity_id: item.entity_id });
+      const { error } = await legacyDisabledClient.from("app_activity_logs").insert({ actor_name: item.actor_name, actor_role: item.actor_role, action: item.action, description: item.description, entity_table: item.entity_table, entity_id: item.entity_id });
       if (error) throw error;
     } catch (err) {
       console.warn("app_activity_logs tablosu yok veya erişilemiyor, yerel log tutuluyor:", err);
@@ -444,11 +444,11 @@ async function loadActivityLogs() {
   let rows = readLocalActivityLogs();
   if (state.activityLogTableReady) {
     try {
-      const { data, error } = await supabaseClient.from("app_activity_logs").select("*").order("created_at", { ascending: false }).limit(120);
+      const { data, error } = await legacyDisabledClient.from("app_activity_logs").select("*").order("created_at", { ascending: false }).limit(120);
       if (error) throw error;
       rows = data || rows;
     } catch (err) {
-      console.warn("Aktivite logları Supabase'den alınamadı:", err);
+      console.warn("Aktivite logları eski veri katmanı'den alınamadı:", err);
       state.activityLogTableReady = false;
     }
   }
@@ -539,7 +539,7 @@ window.saveUserCategoryPermissions = async function() {
     card.querySelectorAll('[data-user-action]').forEach(x => user.permissions[x.dataset.userAction] = x.checked);
   });
   localStorage.setItem(STAFF_STORE_KEY, JSON.stringify(cleanStaffList(list)));
-  const ok = await saveStaffListToSupabase(list);
+  const ok = await saveStaffListToServer(list);
   if (!ok) return;
   renderUserCategoryPermissions(); applyRoleVisibility();
   await logActivity("user_category_permissions", "Personel kategori ve işlem yetkileri güncellendi", "app_users", "permissions");
@@ -746,7 +746,7 @@ async function createNotification({ title, message, type = "system", target_role
     return item;
   }
   try {
-    const { data, error } = await supabaseClient.from("notifications").insert(payload).select("*").single();
+    const { data, error } = await legacyDisabledClient.from("notifications").insert(payload).select("*").single();
     if (error) throw error;
     return data;
   } catch (err) {
@@ -760,7 +760,7 @@ async function createNotification({ title, message, type = "system", target_role
 async function loadNotifications() {
   if (!state.notificationTableReady) { renderNotifications(); return; }
   try {
-    const { data, error } = await supabaseClient.from("notifications").select("*").order("created_at", { ascending: false }).limit(120);
+    const { data, error } = await legacyDisabledClient.from("notifications").select("*").order("created_at", { ascending: false }).limit(120);
     if (error) throw error;
     state.notifications = data || [];
     state.unreadNotificationCount = state.notifications.filter(n => !n.is_read).length;
@@ -781,7 +781,7 @@ window.markNotificationRead = async function(id) {
   updateNotificationBadge();
   renderNotifications();
   if (!String(id).startsWith("local_") && state.notificationTableReady) {
-    await supabaseClient.from("notifications").update({ is_read: true, read_at: new Date().toISOString() }).eq("id", id);
+    await legacyDisabledClient.from("notifications").update({ is_read: true, read_at: new Date().toISOString() }).eq("id", id);
   }
 };
 window.markAllNotificationsRead = async function() {
@@ -790,7 +790,7 @@ window.markAllNotificationsRead = async function() {
   updateNotificationBadge();
   renderNotifications();
   if (state.notificationTableReady) {
-    await supabaseClient.from("notifications").update({ is_read: true, read_at: new Date().toISOString() }).eq("is_read", false);
+    await legacyDisabledClient.from("notifications").update({ is_read: true, read_at: new Date().toISOString() }).eq("is_read", false);
   }
   showToast("Bildirimler okundu yapıldı ✅");
 };
@@ -882,7 +882,7 @@ async function insertStockMovementRecord({ productId, movementType, quantity, de
   };
   if (plate) payload.plate = plate;
   if (recordNo) payload.record_no = recordNo;
-  const { error } = await supabaseClient.from("stock_movements").insert(payload);
+  const { error } = await legacyDisabledClient.from("stock_movements").insert(payload);
   if (error) throw error;
   return true;
 }
@@ -1264,7 +1264,7 @@ async function uploadProductImageIfNeeded(productId) {
   const safeId = String(productId || crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g, "");
   const filePath = `${safeId}/main-${Date.now()}.${selectedProductImageExt || "webp"}`;
   if (el.productImageStatus) el.productImageStatus.textContent = "Resim yükleniyor...";
-  const { error: uploadError } = await supabaseClient.storage
+  const { error: uploadError } = await legacyDisabledClient.storage
     .from(STOCK_IMAGE_BUCKET)
     .upload(filePath, selectedProductImageBlob, {
       cacheControl: "31536000",
@@ -1272,7 +1272,7 @@ async function uploadProductImageIfNeeded(productId) {
       contentType: selectedProductImageBlob.type || "image/webp"
     });
   if (uploadError) throw uploadError;
-  const { data } = supabaseClient.storage.from(STOCK_IMAGE_BUCKET).getPublicUrl(filePath);
+  const { data } = legacyDisabledClient.storage.from(STOCK_IMAGE_BUCKET).getPublicUrl(filePath);
   const publicUrl = data?.publicUrl || "";
   if (!publicUrl) throw new Error("Resim linki alınamadı");
   return { imageUrl: publicUrl, imageThumbUrl: publicUrl };

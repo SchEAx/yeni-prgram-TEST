@@ -89,9 +89,9 @@ function writeStaffList(list) {
   localStorage.setItem(STAFF_STORE_KEY, JSON.stringify(cleaned));
   return cleaned;
 }
-async function loadStaffListFromSupabase() {
+async function loadStaffListFromServer() {
   try {
-    const { data, error } = await supabaseClient
+    const { data, error } = await legacyDisabledClient
       .from("app_users")
       .select("auth_user_id, username, name, role, is_active, last_seen_at, last_login_at, allowed_categories, permissions")
       .eq("is_active", true)
@@ -114,7 +114,7 @@ async function loadStaffListFromSupabase() {
     }
     return readStaffList();
   } catch (err) {
-    console.warn("Personel Supabase'den alınamadı, local devam:", err?.message || err);
+    console.warn("Personel eski veri katmanı'den alınamadı, local devam:", err?.message || err);
     return readStaffList();
   }
 }
@@ -125,10 +125,10 @@ function setStaffEditorMessage(message = "", type = "") {
   box.className = `staff-editor-message${type ? ` ${type}` : ""}${message ? "" : " hidden"}`;
 }
 
-async function saveStaffListToSupabase(list, pendingPasswords = new Map()) {
+async function saveStaffListToServer(list, pendingPasswords = new Map()) {
   try {
     const incoming = cleanStaffList(list);
-    const { data: sessionData } = await supabaseClient.auth.getSession();
+    const { data: sessionData } = await legacyDisabledClient.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
     if (!accessToken) throw new Error("Oturum süresi dolmuş. Tekrar giriş yap.");
 
@@ -163,7 +163,7 @@ async function saveStaffListToSupabase(list, pendingPasswords = new Map()) {
     }
     return true;
   } catch (err) {
-    console.warn("Personel Supabase'e yazılamadı:", err?.message || err);
+    console.warn("Personel eski veri katmanı'e yazılamadı:", err?.message || err);
     const message = "Personel kaydedilemedi: " + (err?.message || err);
     setStaffEditorMessage(message, "error");
     showToast(message, true);
@@ -351,7 +351,7 @@ window.saveStaffEditor = async function() {
   const pendingPasswords = new Map(staff.map((item) => [item.authUserId || normalizeText(item.name), item.pendingPassword]));
   if (saveButton) { saveButton.disabled = true; saveButton.textContent = "Kaydediliyor…"; }
   setStaffEditorMessage("Personel hesapları kaydediliyor…", "info");
-  const syncOk = await saveStaffListToSupabase(cleaned, pendingPasswords);
+  const syncOk = await saveStaffListToServer(cleaned, pendingPasswords);
   if (saveButton) { saveButton.disabled = false; saveButton.textContent = "Kaydet"; }
   if (!syncOk) return;
 
@@ -369,7 +369,7 @@ window.resetStaffEditor = async function() {
   if (!(await appConfirm("Personel listesi ve şifreler varsayılana dönsün mü?", { danger: true }))) return;
   localStorage.removeItem(STAFF_STORE_KEY);
   localStorage.removeItem(CURRENT_STAFF_STORE_KEY);
-  const syncOk = await saveStaffListToSupabase(DEFAULT_STAFF_LIST);
+  const syncOk = await saveStaffListToServer(DEFAULT_STAFF_LIST);
   if (!syncOk) return;
   if (el.staffEditorBody) el.staffEditorBody.innerHTML = readStaffList().map(staffEditorRow).join("");
   renderStaffSelector();
