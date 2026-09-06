@@ -195,3 +195,10 @@ v15.6:
 - Kategori Değerleri sekmesindeki width:100% mobil taşma hatası düzeltildi.
 - Mobilde üst Migration rozeti header üstünü kapatmasın diye gizlendi.
 - Kullanıcının kendi şifresini değiştirmesinde minimum uzunluk tekrar 4 karakter yapıldı.
+
+
+=== v15.7 ===
+- Plaka/Müşteri Geçmişi PostgreSQL API moduna hazırlandı.
+- Uzun bilgi kutuları ! baloncuklarına dönüştürüldü (4 sn otomatik kapanır).
+- Aktif sol menü glow görünümü tarayıcılar arasında standardize edildi.
+- Ürün küçük görsellerini gizleyen eski sade-stok CSS kaldırıldı.

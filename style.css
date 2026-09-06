@@ -321,7 +321,7 @@
 /* === Sade stok modu === */
 .legacy-page{display:none!important}
 .operation-card{grid-template-columns:1fr auto!important}
-.product-card-img,.product-thumb{display:none!important}
+.product-card-img,.product-thumb{display:flex!important}
 @media(max-width:900px){.top-nav{grid-template-columns:repeat(2,1fr)}}
 
 
@@ -1942,3 +1942,44 @@ body::before{
     display:none!important;
   }
 }
+
+
+/* ==========================================================
+   GarageFlow v15.7 - bilgi balonu / tutarlı aktif menü / görsel
+   ========================================================== */
+.garage-info-source{display:none!important}
+.garage-info-wrap{position:relative;display:inline-flex;vertical-align:middle;margin:2px 0 8px}
+.garage-info-btn{
+  width:28px;height:28px;border-radius:999px;border:1px solid color-mix(in srgb,var(--primary) 55%,var(--border));
+  background:color-mix(in srgb,var(--primary) 16%,var(--card));color:var(--text-strong);font-weight:950;font-size:16px;
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:none!important;line-height:1
+}
+.garage-info-btn:hover{background:color-mix(in srgb,var(--primary) 25%,var(--card))}
+.garage-info-bubble{
+  position:absolute;z-index:500;top:36px;left:0;width:min(420px,calc(100vw - 36px));padding:12px 14px;border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--primary) 40%,var(--border));background:color-mix(in srgb,var(--panel) 96%,#000 4%);
+  color:var(--text);box-shadow:0 14px 35px rgba(0,0,0,.32);font-size:13px;line-height:1.5
+}
+.garage-info-bubble strong{display:block;margin-bottom:5px;color:var(--text-strong)}
+@media(max-width:640px){.garage-info-bubble{position:fixed;left:12px;right:12px;top:auto;bottom:18px;width:auto}}
+
+/* Tarayıcılar arası aktif menü görünümü aynı kalsın: beyaz sızıntı yerine tema glow'u. */
+@media(min-width:1080px){
+  .top-nav button.active{
+    background:var(--primary)!important;
+    border-color:color-mix(in srgb,var(--primary) 70%,var(--border))!important;
+    box-shadow:0 5px 14px color-mix(in srgb,var(--primary) 28%,transparent)!important;
+  }
+  .top-nav button.active::after{
+    background:rgba(255,255,255,.88)!important;
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 28%,transparent)!important;
+  }
+}
+
+/* Eski sade-stok kuralı artık ürün görsellerini gizlemesin. */
+.product-card-img,.product-thumb{display:flex!important}
+img.product-card-img,img.product-thumb{display:block!important;object-fit:cover}
+
+/* Plaka Geçmişi migration-testte gerçek sayfa. */
+.migration-test-mode #page-history{display:block}
+.migration-test-mode #page-history.hidden{display:none!important}

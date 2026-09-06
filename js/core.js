@@ -1,5 +1,5 @@
 // Core: yapılandırma, state, DOM, yetkiler, bildirimler ve ortak yardımcılar
-const APP_VERSION = 'v3.13.1-MIGRATION-TEST-JWT-15.6';
+const APP_VERSION = 'v3.13.1-MIGRATION-TEST-JWT-15.7';
 let isOffline = !navigator.onLine;
 let globalLoading = false;
 
@@ -198,6 +198,7 @@ const TAB_DEFINITIONS = [
   { key: "orderSuggestion", label: "Sipariş Önerisi" },
   { key: "purchaseOrders", label: "Verilen Siparişler" },
   { key: "surveys", label: "Müşteri Memnuniyeti" },
+  { key: "history", label: "Plaka Geçmişi" },
   { key: "management", label: "Yönetim" },
   { key: "settings", label: "Ayarlar" },
   { key: "users", label: "Kullanıcılar / Yetkiler" },
@@ -206,8 +207,8 @@ const TAB_DEFINITIONS = [
 const ALL_TAB_KEYS = TAB_DEFINITIONS.map(t => t.key);
 const DEFAULT_ROLE_PERMISSIONS = {
   admin: [...ALL_TAB_KEYS],
-  depo: ["operation", "add", "movements", "critical", "categoryValues", "orderSuggestion", "purchaseOrders", "settings", "surveys"],
-  kasa: ["operation", "movements", "critical", "categoryValues", "orderSuggestion", "purchaseOrders", "surveys"],
+  depo: ["operation", "add", "movements", "critical", "categoryValues", "orderSuggestion", "purchaseOrders", "history", "settings", "surveys"],
+  kasa: ["operation", "movements", "critical", "categoryValues", "orderSuggestion", "purchaseOrders", "history", "surveys"],
   satis: ["operation", "movements", "critical"],
   usta: ["operation", "movements", "critical"]
 };

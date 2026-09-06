@@ -2,7 +2,7 @@
 const MIGRATION_TEST_MODE = true;
 const MIGRATION_API_BASE = "https://api.scheax.com.tr/migration-test";
 const MIGRATION_TOKEN_KEY = "garage_migration_test_jwt_v1";
-const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "management", "users", "settings", "logs", "surveys"]);
+const MIGRATION_ALLOWED_TABS = new Set(["operation", "movements", "critical", "categoryValues", "orderSuggestion", "add", "requests", "purchaseOrders", "management", "users", "settings", "logs", "surveys", "history"]);
 
 function migrationToken() {
   try { return localStorage.getItem(MIGRATION_TOKEN_KEY) || ""; } catch { return ""; }
@@ -2055,3 +2055,84 @@ deleteMarkedProducts = async function() {
   }
 };
 window.deleteMarkedProducts = deleteMarkedProducts;
+
+
+// ============================================================
+// Migration v15.7 - PostgreSQL Plaka / Müşteri Geçmişi
+// ============================================================
+window.renderPlateHistory = async function() {
+  const input = document.getElementById("historySearchInput");
+  const requestBox = document.getElementById("historyRequestList");
+  const moveBox = document.getElementById("historyMovementList");
+  const raw = String(input?.value || "").trim();
+
+  if (!requestBox || !moveBox) return;
+
+  const setText = (id, value) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = value;
+  };
+
+  if (raw.length < 2) {
+    requestBox.innerHTML = `<div class="empty-state">En az 2 karakter plaka, müşteri adı veya kayıt no yaz</div>`;
+    moveBox.innerHTML = `<div class="empty-state">Arama bekleniyor</div>`;
+    ["historyRequestCount", "historyMovementCount", "historySaleCount"].forEach(id => setText(id, "0"));
+    setText("historyLastDate", "-");
+    return;
+  }
+
+  requestBox.innerHTML = `<div class="empty-state">Geçmiş aranıyor...</div>`;
+  moveBox.innerHTML = `<div class="empty-state">Hareketler aranıyor...</div>`;
+
+  try {
+    const payload = await apiFetch(`/api/history?q=${encodeURIComponent(raw)}`);
+    const reqs = Array.isArray(payload.requests) ? payload.requests : [];
+    const moves = Array.isArray(payload.movements) ? payload.movements : [];
+    const summary = payload.summary || {};
+
+    setText("historyRequestCount", String(summary.request_count ?? reqs.length));
+    setText("historyMovementCount", String(summary.movement_count ?? moves.length));
+    setText("historySaleCount", String(summary.outgoing_count ?? 0));
+    setText("historyLastDate", summary.last_date ? formatDate(summary.last_date) : "-");
+
+    requestBox.innerHTML = reqs.length ? reqs.map(r => `
+      <div class="movement-item">
+        <div class="movement-top">
+          <div>
+            <strong>${escapeHtml(r.plate || "Plaka yok")}</strong>
+            <div class="muted">${escapeHtml(r.customer_name || "-")}</div>
+          </div>
+          <span class="badge status-${escapeHtml(r.status || "bos")}">${formatRequestStatus(r.status)}</span>
+        </div>
+        <div>İstenen: <strong>${escapeHtml(r.requested_text || "-")}</strong></div>
+        <div>Kayıt No: <strong>${escapeHtml(r.record_no || r.kabul_record_id || "-")}</strong></div>
+        <div>Araç: <strong>${escapeHtml([r.vehicle_brand, r.vehicle_model, r.vehicle_type, r.vehicle_year].filter(Boolean).join(" ") || "-")}</strong></div>
+        ${r.note ? `<div>Not: <strong>${escapeHtml(r.note)}</strong></div>` : ""}
+        <div>Tarih: <strong>${formatDate(r.created_at)}</strong></div>
+      </div>`).join("") : `<div class="empty-state">Talep bulunamadı</div>`;
+
+    moveBox.innerHTML = moves.length ? moves.map(m => {
+      const type = String(m.movement_type || "");
+      const typeClass = type.includes("iade") || type.includes("giris") || type.includes("rezerv_iptal") ? "giris" : "cikis";
+      return `
+        <div class="movement-item">
+          <div class="movement-top">
+            <div>
+              <strong>${escapeHtml(m.product_name || m.description || "-")}</strong>
+              <div class="muted">${escapeHtml(m.description || "-")}</div>
+            </div>
+            <span class="badge ${typeClass}">${escapeHtml(type || "-")}</span>
+          </div>
+          <div>Miktar: <strong>${Number(m.quantity || 0)}</strong></div>
+          <div>Plaka: <strong>${escapeHtml(m.plate || "-")}</strong></div>
+          <div>Kayıt No: <strong>${escapeHtml(m.record_no || "-")}</strong></div>
+          ${m.category || m.location ? `<div class="muted">${escapeHtml(m.category || "-")} · Raf: ${escapeHtml(m.location || "-")}</div>` : ""}
+          <div>Tarih: <strong>${formatDate(m.created_at)}</strong></div>
+        </div>`;
+    }).join("") : `<div class="empty-state">Hareket bulunamadı</div>`;
+  } catch (err) {
+    requestBox.innerHTML = `<div class="empty-state">${escapeHtml(err?.message || "Geçmiş alınamadı")}</div>`;
+    moveBox.innerHTML = `<div class="empty-state">Geçmiş alınamadı</div>`;
+    showToast(err?.message || "Plaka geçmişi alınamadı", true);
+  }
+};

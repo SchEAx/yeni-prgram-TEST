@@ -512,3 +512,65 @@ async function notifyNewRequest(req) {
 }
 
 
+
+
+// ============================================================
+// v15.7 - Kalabalık açıklamaları ! bilgi balonuna çevir
+// ============================================================
+(function initGarageInfoPopovers() {
+  const nodes = [...document.querySelectorAll('.collapsible-info')];
+  nodes.forEach((node, index) => {
+    if (node.dataset.infoReady === '1') return;
+    node.dataset.infoReady = '1';
+
+    const text = String(node.innerText || node.textContent || '').trim();
+    if (!text) return;
+
+    node.classList.add('garage-info-source');
+    node.setAttribute('aria-hidden', 'true');
+
+    const wrap = document.createElement('span');
+    wrap.className = 'garage-info-wrap';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'garage-info-btn';
+    btn.setAttribute('aria-label', node.dataset.infoTitle || 'Bilgi');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.textContent = '!';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'garage-info-bubble hidden';
+    bubble.setAttribute('role', 'status');
+    bubble.innerHTML = `<strong>${escapeHtml(node.dataset.infoTitle || 'Bilgi')}</strong><div>${escapeHtml(text).replace(/\n+/g, '<br>')}</div>`;
+
+    let timer = null;
+    const close = () => {
+      bubble.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+      if (timer) clearTimeout(timer);
+      timer = null;
+    };
+    const open = () => {
+      document.querySelectorAll('.garage-info-bubble:not(.hidden)').forEach(x => x.classList.add('hidden'));
+      bubble.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(close, 4000);
+    };
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (bubble.classList.contains('hidden')) open(); else close();
+    });
+    wrap.addEventListener('mouseleave', () => { if (!bubble.classList.contains('hidden')) close(); });
+    wrap.append(btn, bubble);
+    node.parentNode.insertBefore(wrap, node);
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('.garage-info-wrap')) return;
+    document.querySelectorAll('.garage-info-bubble:not(.hidden)').forEach(x => x.classList.add('hidden'));
+  });
+})();

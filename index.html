@@ -21,8 +21,8 @@
 <meta content="yes" name="mobile-web-app-capable"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="Garage Stok" name="apple-mobile-web-app-title"/>
-<link href="manifest.webmanifest?v=15.6" rel="manifest"/>
-<link href="style.css?v=15.6" rel="stylesheet"/>
+<link href="manifest.webmanifest?v=15.7" rel="manifest"/>
+<link href="style.css?v=15.7" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -83,6 +83,7 @@
 <button id="nav-settings" onclick="switchTab('settings')">Ayarlar</button>
 <button id="nav-users" onclick="switchTab('users')">Kullanıcılar</button>
 <button id="nav-surveys" onclick="switchTab('surveys')">Müşteri Memnuniyeti</button>
+<button id="nav-history" onclick="switchTab('history')">Plaka Geçmişi</button>
 <button id="nav-logs" onclick="switchTab('logs')">Loglar</button>
 </nav>
 <section class="stats-grid stats-grid-4">
@@ -120,7 +121,7 @@
 <input autocomplete="off" id="operationSearchInput" placeholder="Megane 4, Egea, Clio..." type="text"/>
 </div>
 </div>
-<div class="operation-hint">
+<div class="operation-hint collapsible-info" data-info-title="Hızlı İşlem İpuçları">
 <strong>İpucu:</strong> Marka + kategori seçip sadece modeli yazarsan sonuç listesi çok daralır. Örn: Renault + Paspas + Megane 4.<br/>
 <strong>Toplu stok:</strong> Aynı ürün farklı raflarda bulunuyorsa tek kartta toplam stok görünür; rafların giriş/çıkış işlemleri kartın altında ayrı ayrı kalır.
         </div>
@@ -166,7 +167,7 @@
 <section class="grid-2 purchase-order-grid">
   <div class="card">
     <div class="section-head"><div><h2>Sipariş Havuzu</h2><p class="muted">Ürünleri burada beklet; aynı tedarikçiye ait kalemleri seçip tek sipariş oluştur.</p></div><button class="btn secondary" type="button" onclick="clearPurchaseOrderDraft()">Havuzu Temizle</button></div><div class="migration-purchase-warning">Migration test: Havuzu toplu temizleme kapalıdır; mevcut gerçek havuz kayıtları korunur.</div>
-    <div class="purchase-pool-info">
+    <div class="purchase-pool-info collapsible-info" data-info-title="Sipariş Havuzu Bilgisi">
       <strong>Nasıl çalışır?</strong>
       <span>Ürün kartından “Siparişe Ekle” dediğin kalemler burada ayrı ayrı bekler. Bir kalemde “Sipariş Oluştur” dediğinde aynı tedarikçiye ait diğer ürünleri de seçebilirsin.</span>
     </div>
@@ -284,7 +285,7 @@
 <div class="full">
 <label>Ürün / Barkod Ara</label>
 <input autocomplete="off" id="saleSearchInput" placeholder="Barkod okut veya paspas, Megane, Rizline yaz..." type="text"/>
-<p class="muted sale-hint">Barkod birebir eşleşirse ürün otomatik sepete eklenir.</p>
+<p class="muted sale-hint collapsible-info" data-info-title="Hızlı Satış Bilgisi">Barkod birebir eşleşirse ürün otomatik sepete eklenir.</p>
 </div>
 </div>
 <div class="sale-product-list" id="saleProductList">
@@ -404,7 +405,7 @@
 </section>
 </div>
 
-<div class="page hidden legacy-page" id="page-history">
+<div class="page hidden" id="page-history">
 <section class="card">
 <div class="section-head">
 <div><h2>Müşteri / Plaka Geçmişi</h2><p class="muted">Plaka veya müşteri adı ile depo talepleri ve stok hareketlerini bul</p></div>
@@ -485,7 +486,7 @@
 <select id="orderSuggestionProductBrandFilter" class="search-input stock-category-select" onchange="setOrderSuggestionProductBrandFilter(this.value)"><option value="all">Tüm Ürün Markaları</option></select>
 <select id="orderSuggestionCarBrandFilter" class="search-input stock-category-select" onchange="setOrderSuggestionCarBrandFilter(this.value)"><option value="all">Tüm Araç Markaları</option></select>
         </div>
-<div class="order-hint">
+<div class="order-hint collapsible-info" data-info-title="Sipariş Önerisi Bilgisi">
           Hesap: <strong>Önerilen Sipariş = Son 7 Gün Çıkış - Mevcut Stok</strong>. Sonuç eksi çıkarsa 0 gösterilir.
         </div>
 <div class="category-value-summary" id="orderSuggestionSummary">
@@ -512,7 +513,7 @@
 <button class="btn secondary" onclick="loadCustomerSurveyStats()" type="button">Yenile</button>
 </div>
 </div>
-<div class="survey-admin-note">
+<div class="survey-admin-note collapsible-info" data-info-title="Anket Bilgisi">
           QR linki: <strong>https://anket-five.vercel.app</strong> — Müşteriler bu sayfadan anonim değerlendirme gönderebilir.
         </div>
 <div id="customerSurveyPanel">
@@ -838,21 +839,21 @@ LED" rows="8"></textarea>
 <datalist id="carTypeList"></datalist>
 <datalist id="vehicleYearList"></datalist>
 <datalist id="locationList"></datalist>
-<script src="js/core.js?v=15.6"></script>
-<script src="js/inventory.js?v=15.6"></script>
-<script src="js/sales-dashboard.js?v=15.6"></script>
-<script src="js/staff.js?v=15.6"></script>
-<script src="js/sales.js?v=15.6"></script>
-<script src="js/requests.js?v=15.6"></script>
-<script src="js/surveys.js?v=15.6"></script>
-<script src="js/management.js?v=15.6"></script>
-<script src="js/purchasing.js?v=15.6"></script>
-<script src="js/navigation.js?v=15.6"></script>
-<script src="js/reports.js?v=15.6"></script>
-<script src="js/migration-api.js?v=15.6"></script>
-<script src="js/events.js?v=15.6"></script>
-<script src="js/excel.js?v=15.6"></script>
-<script src="js/migration-excel.js?v=15.6"></script>
-<script src="app.js?v=15.6"></script>
+<script src="js/core.js?v=15.7"></script>
+<script src="js/inventory.js?v=15.7"></script>
+<script src="js/sales-dashboard.js?v=15.7"></script>
+<script src="js/staff.js?v=15.7"></script>
+<script src="js/sales.js?v=15.7"></script>
+<script src="js/requests.js?v=15.7"></script>
+<script src="js/surveys.js?v=15.7"></script>
+<script src="js/management.js?v=15.7"></script>
+<script src="js/purchasing.js?v=15.7"></script>
+<script src="js/navigation.js?v=15.7"></script>
+<script src="js/reports.js?v=15.7"></script>
+<script src="js/migration-api.js?v=15.7"></script>
+<script src="js/events.js?v=15.7"></script>
+<script src="js/excel.js?v=15.7"></script>
+<script src="js/migration-excel.js?v=15.7"></script>
+<script src="app.js?v=15.7"></script>
 </body>
 </html>
