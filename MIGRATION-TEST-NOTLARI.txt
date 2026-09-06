@@ -6,11 +6,11 @@ Açık ekranlar: İşlem, Hareketler, Kritik Stok, Sipariş Önerisi, Ürün Ekl
 Açık yazma: Stok giriş/çıkış, ürün CRUD/görsel, rezervasyon, sipariş havuzu/sipariş girişleri, kullanıcı/yetki yönetimi
 
 Güvenlik kilitleri:
-- Supabase SDK paketten çıkarıldı.
-- Eski Supabase client yerine ağ çağrısı yapmayan kilitli stub var.
+- eski veri katmanı SDK paketten çıkarıldı.
+- Eski eski veri katmanı client yerine ağ çağrısı yapmayan kilitli stub var.
 - Eski Vercel /api serverless klasörü çıkarıldı.
 - Ürün ekle/düzenle/sil, barkod, sipariş, kullanıcı/yetki, ayarlar vb. ekranlar canAccessTab ile kapalı ve CSS ile gizli.
-- Supabase Storage görselleri migration testte yüklenmiyor.
+- eski veri katmanı Storage görselleri migration testte yüklenmiyor.
 
 Deploy:
 - SADECE ayrı bir Vercel test projesine deploy edin. Canlı projeye yüklemeyin.
@@ -26,7 +26,7 @@ JWT-3: Kritik Stok PostgreSQL /api/stock/critical üzerinden açıldı. 715 krit
 
 - v4.2: Sipariş Önerisi menü görünürlüğü düzeltildi; migration güvenlik CSS kilidinden çıkarıldı.
 
-- v5.0: Ürün Ekle/Düzenle güvenli PostgreSQL CRUD API'ye taşındı. Admin silme API güvenlik kontrolleriyle açıldı. Kamera/Galeri görselleri /api/products/:id/image üzerinden sunucudaki migration-test uploads alanına gider. Eski Supabase Storage görselleri testte gösterilmez. Excel yükleme/indirme paneli migration testte kapalı tutulur.
+- v5.0: Ürün Ekle/Düzenle güvenli PostgreSQL CRUD API'ye taşındı. Admin silme API güvenlik kontrolleriyle açıldı. Kamera/Galeri görselleri /api/products/:id/image üzerinden sunucudaki migration-test uploads alanına gider. Eski eski veri katmanı Storage görselleri testte gösterilmez. Excel yükleme/indirme paneli migration testte kapalı tutulur.
 
 
 v6.0:
@@ -50,7 +50,7 @@ v8.0:
 - Rol bazlı menü yetkileri app_settings.role_permissions üzerinden GET/PUT çalışır.
 - Kendi Admin hesabını pasifleştirme/rol düşürme backend tarafından engellenir.
 - Personel fiziksel silme ve toplu sıfırlama migration testte kapalıdır.
-- Ayarlar sekmesi tema/yerel görünüm için açıldı; Supabase yazma kullanılmaz.
+- Ayarlar sekmesi tema/yerel görünüm için açıldı; eski veri katmanı yazma kullanılmaz.
 
 
 === v9.0 ===
@@ -76,7 +76,7 @@ v10.2: Toplu fiyat güncellemede sabit tutar için negatif değer desteklendi. �
 
 v11.0:
 - Yönetim sekmesi migration-testte açıldı (admin).
-- Toplu silme artık Supabase yerine PostgreSQL API kullanıyor.
+- Toplu silme artık eski veri katmanı yerine PostgreSQL API kullanıyor.
 - Hedef alan Ürün Markası = SİLİNECEK.
 - Önizlemede ürün, hareket, rezervasyon, sipariş havuzu, verilmiş sipariş kalemi, stok ve rezerve stok sayıları gösterilir.
 - İki aşamalı onay vardır; ikinci aşamada SİLİNECEK yazılması gerekir.
@@ -88,7 +88,7 @@ v12.0:
 - Excel paneli migration-testte yeniden açıldı.
 - Excel filtreleri PostgreSQL /api/excel/filter-options üzerinden gelir.
 - Barkodlu Excel ve Toplam Stok Excel /api/excel/products üzerinden tam stok listesini alır; state.products sınırına bağlı değildir.
-- Excel yükleme Supabase yerine /api/excel/import/preview + /api/excel/import/apply kullanır.
+- Excel yükleme eski veri katmanı yerine /api/excel/import/preview + /api/excel/import/apply kullanır.
 - Önizleme; yeni/güncelleme, stok giriş/çıkış ve hata sayılarını gösterir.
 - Rezerve stok altına düşme, farklı üründe barkod çakışması ve yanlış confirm_count backend tarafından engellenir.
 - Yükleme tek transaction içinde uygulanır ve stok farkları giris/cikis hareketi olarak yazılır.
@@ -149,7 +149,7 @@ v14.3:
 
 === v15.0 ===
 - Müşteri Memnuniyeti sekmesi migration-test modunda açıldı.
-- GarageFlow anket raporu Supabase yerine GET /api/customer-surveys üzerinden PostgreSQL okuyor.
+- GarageFlow anket raporu eski veri katmanı yerine GET /api/customer-surveys üzerinden PostgreSQL okuyor.
 - Toplam anket sayısı API count alanından geliyor; ekranda son 200 kayıt analiz ediliyor.
 - Müşterinin halka açık anket formu henüz PostgreSQL yazımına geçirilmedi; bu aşama sadece GarageFlow yönetim ekranıdır.
 
@@ -182,7 +182,7 @@ v15.4:
 
 
 v15.5:
-- Ayarlar > Hesabım ve Şifre artık Supabase Auth kullanmaz.
+- Ayarlar > Hesabım ve Şifre artık eski veri katmanı Auth kullanmaz.
 - POST /api/auth/change-password ile mevcut şifre bcrypt compare edilir.
 - Yeni şifre bcrypt hash olarak app_users.password_hash alanına yazılır.
 - Başarılı değişiklik sonrası mevcut oturum kapatılır ve yeni şifreyle giriş istenir.
@@ -197,7 +197,7 @@ v15.6:
 - Kullanıcının kendi şifresini değiştirmesinde minimum uzunluk tekrar 4 karakter yapıldı.
 
 
-=== v15.7 ===
+=== v15.8 ===
 - Plaka/Müşteri Geçmişi PostgreSQL API moduna hazırlandı.
 - Uzun bilgi kutuları ! baloncuklarına dönüştürüldü (4 sn otomatik kapanır).
 - Aktif sol menü glow görünümü tarayıcılar arasında standardize edildi.

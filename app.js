@@ -82,4 +82,4 @@ if (document.readyState === 'loading') {
   node.addEventListener("change", updateBulkPricePreview);
   node.addEventListener("input", updateBulkPricePreview);
 });
-// Migration test: Supabase auth listener kapalı.
+// Migration test: eski veri katmanı auth listener kapalı.
