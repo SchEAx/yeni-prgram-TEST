@@ -1,0 +1,7 @@
+GarageFlow v15.9
+
+- Eski harici veri sağlayıcı SDK/URL/key bağımlılığı yok.
+- PostgreSQL + JWT API aktif veri kaynağıdır.
+- Eski sorgu katmanı yalnızca devre dışı uyumluluk koruması olarak kalır ve ağ isteği yapamaz.
+- Harici eski görsel URL'leri engellenir; yalnızca aynı origin ve api.scheax.com.tr kaynakları kabul edilir.
+- Bir sonraki stabilizasyon turunda devre dışı uyumluluk kodları dosya bazında tamamen budanabilir.
